@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36603.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripMapper", "TripMapper\TripMapper.csproj", "{4CFC5411-2AC3-4950-9DA2-C43B0B243F43}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripMapperDAL", "TripMapperDAL\TripMapperDAL.csproj", "{ED1853CF-9510-4ABC-942C-8828182FD9DF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backend", "Backend", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripMapperBL", "TripMapperBL\TripMapperBL.csproj", "{862EFB3C-C69B-4268-B602-A5BBCFA11537}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TripMapperAPI", "TripMapperBAL\TripMapperAPI.csproj", "{EF2FE972-6C94-0DFB-51D1-22B739161525}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4CFC5411-2AC3-4950-9DA2-C43B0B243F43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4CFC5411-2AC3-4950-9DA2-C43B0B243F43}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4CFC5411-2AC3-4950-9DA2-C43B0B243F43}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4CFC5411-2AC3-4950-9DA2-C43B0B243F43}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED1853CF-9510-4ABC-942C-8828182FD9DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED1853CF-9510-4ABC-942C-8828182FD9DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED1853CF-9510-4ABC-942C-8828182FD9DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED1853CF-9510-4ABC-942C-8828182FD9DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{862EFB3C-C69B-4268-B602-A5BBCFA11537}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{862EFB3C-C69B-4268-B602-A5BBCFA11537}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{862EFB3C-C69B-4268-B602-A5BBCFA11537}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{862EFB3C-C69B-4268-B602-A5BBCFA11537}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF2FE972-6C94-0DFB-51D1-22B739161525}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF2FE972-6C94-0DFB-51D1-22B739161525}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF2FE972-6C94-0DFB-51D1-22B739161525}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF2FE972-6C94-0DFB-51D1-22B739161525}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{ED1853CF-9510-4ABC-942C-8828182FD9DF} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{862EFB3C-C69B-4268-B602-A5BBCFA11537} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{EF2FE972-6C94-0DFB-51D1-22B739161525} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A2BC067D-6688-41F1-B3E3-3609ACB106DC}
+	EndGlobalSection
+EndGlobal

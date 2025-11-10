@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using TripMapperDB.Models;
+
+namespace TripMapperDAL.Interfaces
+{
+    public interface ITripRepository : IGenericRepository<Trip> {
+        Task<IEnumerable<Trip>> GetTripsForUserAsync(int userId);
+        Task<Trip?> GetTripWithDetailsAsync(int id);
+        void SetOriginalRowVersion(Trip trip, byte[] rowVersion);
+        void Attach(Trip trip);
+        void ClearTracking();
+    }
+}
