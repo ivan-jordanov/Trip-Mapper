@@ -11,7 +11,7 @@ namespace TripMapperBL.Interfaces
     {
         Task<IEnumerable<PinDto>> GetAllPinsAsync(int currentUserId);
         Task<PinDto?> GetPinByIdAsync(int id, int currentUserId);
-        Task<PinDto> CreatePinAsync(CreatePinDto dto, int currentUserId, double latitude, double longitude);
+        Task<PinDto?> CreatePinAsync(CreatePinDto dto, int currentUserId, double latitude, double longitude);
         Task<bool> DeletePinAsync(int id, int currentUserId);
     }
 }

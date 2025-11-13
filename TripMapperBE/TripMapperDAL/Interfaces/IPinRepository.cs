@@ -7,5 +7,7 @@ using TripMapperDB.Models;
 
 namespace TripMapperDAL.Interfaces
 {
-    public interface IPinRepository : IGenericRepository<Pin> { }
+    public interface IPinRepository : IGenericRepository<Pin> {
+        Task<Pin?> GetByTitleAsync(string title, int userId);
+    }
 }

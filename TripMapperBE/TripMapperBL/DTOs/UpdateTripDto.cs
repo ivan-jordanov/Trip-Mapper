@@ -13,7 +13,8 @@ namespace TripMapperBL.DTOs
         public string? Description { get; set; }
         public DateOnly? DateVisited { get; set; }
         public DateOnly? DateFrom { get; set; }
-        public required List<string> SharedUsernames { get; set; }
+        public List<string>? SharedUsernames { get; set; } = new List<string>();
+        public List<string>? Pins { get; set; } = new List<string>();
         public byte[] RowVersion { get; set; } = null!;
     }
 }

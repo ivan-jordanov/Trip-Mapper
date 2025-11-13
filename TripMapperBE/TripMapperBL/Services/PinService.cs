@@ -42,11 +42,16 @@ namespace TripMapperBL.Services
             return _mapper.Map<PinDto>(pin);
         }
 
-        public async Task<PinDto> CreatePinAsync(CreatePinDto dto, int currentUserId, double latitude, double longitude)
+        public async Task<PinDto?> CreatePinAsync(CreatePinDto dto, int currentUserId, double latitude, double longitude)
         {
-            // todo: add logic for photos, modify the dto
-            var pin = _mapper.Map<Pin>(dto);
+            var pin = await _uow.Pins.GetByTitleAsync(dto.Title, currentUserId);
+            if (pin != null)
+            {
+                return null;
+            }
+            pin = _mapper.Map<Pin>(dto);
             pin.UserId = currentUserId;
+
 
             
             try

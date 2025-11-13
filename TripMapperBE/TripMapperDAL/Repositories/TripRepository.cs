@@ -12,6 +12,19 @@ namespace TripMapperDAL.Repositories
     public class TripRepository : GenericRepository<Trip>, ITripRepository
     {
         public TripRepository(TripMapperContext context) : base(context) { }
+        public async Task<Trip?> GetByTitleAsync(string title, int userId)
+        {
+            return await _context.Trips
+                .Include(t => t.TripAccesses)
+                .FirstOrDefaultAsync(t =>
+                    t.Title == title &&
+                    t.TripAccesses.Any(a =>
+                        a.UserId == userId &&
+                        a.AccessLevel == "Owner"
+                    )
+                );
+        }
+
 
         public async Task<IEnumerable<Trip>> GetTripsForUserAsync(int userId)
         {

@@ -41,8 +41,11 @@ namespace TripMapper.Controllers
         public async Task<IActionResult> CreatePin([FromForm] CreatePinDto dto, [FromForm] double latitude, [FromForm] double longitude, IFormFile? photo)
         {
             var userId = User.GetUserId();
-
             var pin = await _pinService.CreatePinAsync(dto, userId, latitude, longitude);
+
+            if (pin == null) return BadRequest("The pin title must be unique.");
+
+            
 
             if (photo != null)
             {

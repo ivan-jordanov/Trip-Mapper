@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
 using TripMapperBL.DTOs;
@@ -40,14 +41,46 @@ namespace TripMapperBL.Services
             return _mapper.Map<TripDto>(trip);
         }
 
-        public async Task<TripDto> CreateTripAsync(CreateTripDto dto, int currentUserId)
+        public async Task<TripDto?> CreateTripAsync(CreateTripDto dto, int currentUserId)
         {
-            var trip = _mapper.Map<Trip>(dto);
+            var trip = await _uow.Trips.GetByTitleAsync(dto.Title, currentUserId);
+            if (trip != null)
+            {
+                return null;
+            }
+            trip = _mapper.Map<Trip>(dto);
 
-            // TODO: Complete trip here, add logic for photos & pins, update DTOs
 
             await _uow.Trips.AddAsync(trip);
             await _uow.CompleteAsync();
+
+            // Form relationship pins - trip
+
+            // Normalize strings
+            var targetTitles = dto.Pins?
+                .Where(t => !string.IsNullOrWhiteSpace(t))
+                .Select(t => t.Trim().ToLower())
+                .Distinct()
+                .ToList() ?? new List<string>();
+
+            // Load all pins belonging to this user whose titles match & are not already assigned to another trip
+            var candidatePins = await _uow.Pins.Query()
+                .Where(p =>
+                    p.UserId == currentUserId &&
+                    p.TripId == null &&                             
+                    targetTitles.Contains(p.Title.ToLower()))       
+                .ToListAsync();
+
+
+            for (int i = 0; i < candidatePins.Count; i++)
+            {
+                var pin = candidatePins[i];
+
+                // Even though trip initially doesnt have the id yet, EF tracks the object I passed in & populates the id after completeAsync
+                pin.TripId = trip.Id;
+                _uow.Pins.Update(pin);
+            }
+
 
             // Assign current user as owner
             var owner = new TripAccess
@@ -93,7 +126,41 @@ namespace TripMapperBL.Services
             var trip = await _uow.Trips.GetByIdAsync(dto.Id);
             if (trip == null) return null;
 
-            // TODO: Complete trip here, add logic for pins, update DTOs
+            // Correct trip - pins relationships
+
+            // Normalize titles to lowercase
+            var targetTitles = dto.Pins?
+                .Where(t => !string.IsNullOrWhiteSpace(t))
+                .Select(t => t.Trim().ToLower())
+                .Distinct()
+                .ToList() ?? new List<string>();
+
+            // Load pins relevant to update
+            var pins = await _uow.Pins.Query()
+                .Where(p =>
+                    p.UserId == currentUserId &&
+                    (p.TripId == trip.Id ||
+                     targetTitles.Contains(p.Title.ToLower())))
+                .ToListAsync();
+
+            // Attach or detach relationship pin - trip relationship
+            foreach (var pin in pins)
+            {
+                bool shouldBeInTrip = targetTitles.Contains(pin.Title.ToLower());
+
+                if (shouldBeInTrip && pin.TripId != trip.Id)
+                {
+                    pin.TripId = trip.Id;
+                    _uow.Pins.Update(pin);
+                }
+                else if (!shouldBeInTrip && pin.TripId == trip.Id)
+                {
+                    pin.TripId = null;
+                    _uow.Pins.Update(pin);
+                }
+            }
+
+
 
             if (!string.IsNullOrEmpty(dto.Title)) trip.Title = dto.Title;
             if (!string.IsNullOrEmpty(dto.Description)) trip.Description = dto.Description;
