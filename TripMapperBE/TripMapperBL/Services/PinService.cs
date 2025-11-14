@@ -25,7 +25,7 @@ namespace TripMapperBL.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<PinDto>> GetAllPinsAsync(int currentUserId, string? title, DateOnly? visitedFrom, DateOnly? createdFrom, string? category)
+        public async Task<IEnumerable<PinDto>> GetAllPinsAsync(int currentUserId, string? title, DateOnly? visitedFrom, DateTime? createdFrom, string? category)
         {
             var pins = await _uow.Pins.Query()
                 .Where(x => x.UserId == currentUserId)
@@ -87,6 +87,9 @@ namespace TripMapperBL.Services
                     pin.Country = country;
                     pin.State = state; 
                 }
+                pin.Latitude = (decimal)latitude;
+                pin.Longitude = (decimal)longitude;
+
 
             }
             catch (HttpRequestException ex)

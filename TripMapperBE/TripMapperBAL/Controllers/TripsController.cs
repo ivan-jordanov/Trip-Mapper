@@ -12,8 +12,8 @@ using TripMapperDB.Models;
 
 namespace TripMapper.Controllers
 {
-    //[Authorize]
-    public class TripsController : ControllerBase
+    [Authorize]
+    public class TripsController : BaseApiController
     {
         private readonly ITripService _tripService;
         private readonly IPhotoService _photoService;
@@ -98,7 +98,7 @@ namespace TripMapper.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTrip(int id, [FromBody] byte[] rowVersion)
+        public async Task<IActionResult> DeleteTrip(int id, [FromQuery] byte[] rowVersion)
         {
             var userId = User.GetUserId();
 

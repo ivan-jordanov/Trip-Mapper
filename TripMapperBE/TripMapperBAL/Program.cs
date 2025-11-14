@@ -27,7 +27,7 @@ namespace TripMapper
                 ));
 
             // Connect backblaze(cloud file hosting service)
-            builder.Services.Configure<BackblazeSettings>(builder.Configuration.GetSection("Backblaze"));
+            builder.Services.Configure<BackblazeSettings>(builder.Configuration.GetSection("BackblazeSettings"));
 
             // DAL Repositories
             builder.Services.AddScoped<IPinRepository, PinRepository>();
@@ -55,7 +55,9 @@ namespace TripMapper
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
+            //builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
+            builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 
 
 

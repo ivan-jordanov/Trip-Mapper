@@ -9,7 +9,7 @@ using TripMapperDB.Models;
 
 namespace TripMapper.Controllers
 {
-    //[Authorize]
+    [Authorize]
     public class UsersController : BaseApiController
     {
         private readonly IUserService _userService;

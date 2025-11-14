@@ -11,6 +11,5 @@ namespace TripMapperBL.DTOs
         public string? Name { get; set; }
         public string? ColorCode { get; set; }
         public bool? IsDefault { get; set; }
-        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
     }
 }

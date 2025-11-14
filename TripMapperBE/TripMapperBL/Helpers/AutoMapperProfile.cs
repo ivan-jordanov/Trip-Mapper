@@ -26,8 +26,11 @@ namespace TripMapperBL.Helpers
                 .ForMember(d => d.Photos, opt => opt.MapFrom(s => s.Photos));
 
             CreateMap<CreatePinDto, Pin>();
-            CreateMap<CreateTripDto, Trip>();
-            CreateMap<UpdateTripDto, Trip>();
+            CreateMap<CreateTripDto, Trip>()
+            .ForMember(dest => dest.Pins, opt => opt.Ignore());
+            CreateMap<UpdateTripDto, Trip>()
+            .ForMember(dest => dest.Pins, opt => opt.Ignore());
+
         }
     }
 }

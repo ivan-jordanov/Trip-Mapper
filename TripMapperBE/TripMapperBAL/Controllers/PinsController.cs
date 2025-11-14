@@ -10,7 +10,7 @@ using TripMapperDB.Models;
 
 namespace TripMapper.Controllers
 {
-    //[Authorize]
+    [Authorize]
     public class PinsController : BaseApiController
     {
         private readonly IPinService _pinService;
@@ -40,7 +40,7 @@ namespace TripMapper.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreatePin([FromForm] CreatePinDto dto, [FromForm] double latitude, [FromForm] double longitude, IFormFile? photo)
+        public async Task<IActionResult> CreatePin([FromForm]CreatePinDto dto, [FromForm] double latitude, [FromForm] double longitude, IFormFile? photo)
         {
             var userId = User.GetUserId();
             var pin = await _pinService.CreatePinAsync(dto, userId, latitude, longitude);

@@ -11,7 +11,7 @@ using TripMapperDB.Models;
 
 namespace TripMapper.Controllers
 {
-    //[Authorize]
+    [Authorize]
     public class CategoriesController : BaseApiController
     {
         private readonly ICategoryService _categoryService;
