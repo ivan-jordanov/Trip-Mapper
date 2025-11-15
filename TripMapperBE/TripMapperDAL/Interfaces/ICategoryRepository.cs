@@ -8,8 +8,6 @@ using TripMapperDB.Models;
 namespace TripMapperDAL.Interfaces
 {
     public interface ICategoryRepository : IGenericRepository<Category> {
-        void SetOriginalRowVersion(Category category, byte[] rowVersion);
-        void Attach(Category category);
-        void ClearTracking();
+        Task<List<Category>> GetCategoriesForUserAsync(int userId);
     }
 }

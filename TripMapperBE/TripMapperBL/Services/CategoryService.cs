@@ -26,9 +26,7 @@ namespace TripMapperBL.Services
 
         public async Task<IEnumerable<CategoryDto>> GetAllCategoriesAsync(int currentUserId)
         {
-            var categories = await _uow.Categories.Query()
-                .Where(x => x.UserId == currentUserId)
-                .ToListAsync();
+            var categories = await _uow.Categories.GetCategoriesForUserAsync(currentUserId);
 
             return _mapper.Map<IEnumerable<CategoryDto>>(categories);
         }

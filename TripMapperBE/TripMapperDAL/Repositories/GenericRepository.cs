@@ -25,6 +25,7 @@ namespace TripMapperDAL.Repositories
             return await _dbSet.ToListAsync();
         }
 
+
         public T? GetById(int id) => _dbSet.Find(id);
 
         public async Task<T?> GetByIdAsync(int id)

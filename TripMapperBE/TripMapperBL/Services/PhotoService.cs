@@ -44,9 +44,7 @@ namespace TripMapperBL.Services
 
         public async Task<PhotoDto> CreatePhotoRecordForTripAsync(int tripId, string url, int currentUserId)
         {
-            var trip = await _uow.Trips.Query()
-                .Include(t => t.TripAccesses)
-                .FirstOrDefaultAsync(t => t.Id == tripId);
+            var trip = await _uow.Trips.GetTripWithAccessesAsync(tripId);
 
             if (trip == null) throw new KeyNotFoundException();
 
@@ -73,9 +71,7 @@ namespace TripMapperBL.Services
             var titles = pinTitles.Where(t => !string.IsNullOrWhiteSpace(t)).Distinct().ToList();
             if (titles.Count == 0) return 0;
 
-            var trip = await _uow.Trips.Query()
-                .Include(t => t.TripAccesses)
-                .FirstOrDefaultAsync(t => t.Id == tripId);
+            var trip = await _uow.Trips.GetTripWithAccessesAsync(tripId);
 
             if (trip == null) return 0;
 
@@ -115,9 +111,7 @@ namespace TripMapperBL.Services
             if (titles.Count == 0) return 0;
 
             // Load trip + check ownership
-            var trip = await _uow.Trips.Query()
-                .Include(t => t.TripAccesses)
-                .FirstOrDefaultAsync(t => t.Id == tripId);
+            var trip = await _uow.Trips.GetTripWithAccessesAsync(tripId);
 
             if (trip == null) return 0;
 
@@ -174,9 +168,7 @@ namespace TripMapperBL.Services
 
         public async Task<int> DetachAllPhotosForTripAsync(int tripId, int currentUserId)
         {
-            var trip = await _uow.Trips.Query()
-                .Include(t => t.TripAccesses)
-                .FirstOrDefaultAsync(t => t.Id == tripId);
+            var trip = await _uow.Trips.GetTripWithAccessesAsync(tripId);
 
             if (trip == null) return 0;
 
@@ -213,9 +205,7 @@ namespace TripMapperBL.Services
             }
             else if (photo.TripId.HasValue)
             {
-                var trip = await _uow.Trips.Query()
-                    .Include(t => t.TripAccesses)
-                    .FirstOrDefaultAsync(t => t.Id == photo.TripId);
+                var trip = await _uow.Trips.GetTripWithAccessesAsync((int)photo.TripId);
 
                 var owner = trip?.TripAccesses.Any(a => a.UserId == currentUserId && a.AccessLevel == "Owner") == true;
                 if (!owner) return false;

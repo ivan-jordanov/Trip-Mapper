@@ -64,12 +64,7 @@ namespace TripMapperBL.Services
                 .ToList() ?? new List<string>();
 
             // Load all pins belonging to this user whose titles match & are not already assigned to another trip
-            var candidatePins = await _uow.Pins.Query()
-                .Where(p =>
-                    p.UserId == currentUserId &&
-                    p.TripId == null &&                             
-                    targetTitles.Contains(p.Title.ToLower()))       
-                .ToListAsync();
+            var candidatePins = await _uow.Pins.GetPinsForTripUpdateAsync(currentUserId, trip.Id, targetTitles);
 
 
             for (int i = 0; i < candidatePins.Count; i++)
@@ -136,12 +131,7 @@ namespace TripMapperBL.Services
                 .ToList() ?? new List<string>();
 
             // Load pins relevant to update
-            var pins = await _uow.Pins.Query()
-                .Where(p =>
-                    p.UserId == currentUserId &&
-                    (p.TripId == trip.Id ||
-                     targetTitles.Contains(p.Title.ToLower())))
-                .ToListAsync();
+            var pins = await _uow.Pins.GetPinsForTripUpdateAsync(currentUserId, trip.Id, targetTitles);
 
             // Attach or detach relationship pin - trip relationship
             foreach (var pin in pins)
@@ -192,6 +182,7 @@ namespace TripMapperBL.Services
 
             try
             {
+                // No need to use _uow.Trips.Attach because EF does it automatically after using .Attach
                 _uow.Trips.Attach(trip);
                 _uow.Trips.SetOriginalRowVersion(trip, dto.RowVersion);
 

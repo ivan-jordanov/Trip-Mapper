@@ -27,9 +27,7 @@ namespace TripMapperBL.Services
 
         public async Task<IEnumerable<PinDto>> GetAllPinsAsync(int currentUserId, string? title, DateOnly? visitedFrom, DateTime? createdFrom, string? category)
         {
-            var pins = await _uow.Pins.Query()
-                .Where(x => x.UserId == currentUserId)
-                .ToListAsync();
+            var pins = await _uow.Pins.GetPinsForUserAsync(currentUserId, title, visitedFrom, createdFrom, category);
 
             return _mapper.Map<IEnumerable<PinDto>>(pins);
         }

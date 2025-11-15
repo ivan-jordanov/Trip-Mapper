@@ -37,6 +37,14 @@ namespace TripMapper
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ITripAccessRepository, TripAccessRepository>();
 
+            // DAL Repositories with Stored Procedures
+            //builder.Services.AddScoped<IPinRepository, PinRepositorySp>();
+            //builder.Services.AddScoped<ITripRepository, TripRepositorySp>();
+            //builder.Services.AddScoped<IPhotoRepository, PhotoRepositorySp>();
+            //builder.Services.AddScoped<ICategoryRepository, CategoryRepositorySp>();
+            //builder.Services.AddScoped<IUserRepository, UserRepositorySp>();
+            //builder.Services.AddScoped<ITripAccessRepository, TripAccessRepositorySp>();
+
             // BL Services
             builder.Services.AddScoped<IPinService, PinService>();
             builder.Services.AddScoped<ITripService, TripService>();

@@ -11,6 +11,8 @@ namespace TripMapperDAL.Interfaces
         Task<Trip?> GetByTitleAsync(string title, int userId);
         Task<IEnumerable<Trip>> GetTripsForUserAsync(int userId, string? title, DateOnly? dateFrom);
         Task<Trip?> GetTripWithDetailsAsync(int id);
+
+        Task<Trip?> GetTripWithAccessesAsync(int tripId);
         void SetOriginalRowVersion(Trip trip, byte[] rowVersion);
         void Attach(Trip trip);
         void ClearTracking();

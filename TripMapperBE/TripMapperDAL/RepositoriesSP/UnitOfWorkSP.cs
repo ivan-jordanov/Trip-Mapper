@@ -8,9 +8,10 @@ using TripMapperDB.Models;
 
 namespace TripMapperDAL.Repositories
 {
-    public class UnitOfWork : IUnitOfWork
+    public class UnitOfWorkSp : IUnitOfWork
     {
         private readonly TripMapperContext _context;
+
         public IPinRepository Pins { get; }
         public ITripRepository Trips { get; }
         public IPhotoRepository Photos { get; }
@@ -18,13 +19,14 @@ namespace TripMapperDAL.Repositories
         public ICategoryRepository Categories { get; }
         public ITripAccessRepository TripAccess { get; }
 
-        public UnitOfWorkSP(TripMapperContext context,
-                          IPinRepository pinRepo,
-                          ITripRepository tripRepo,
-                          IPhotoRepository photoRepo,
-                          IUserRepository userRepo,
-                          ICategoryRepository catRepo,
-                          ITripAccessRepository tripAccess)
+        public UnitOfWorkSp(
+            TripMapperContext context,
+            IPinRepository pinRepo,
+            ITripRepository tripRepo,
+            IPhotoRepository photoRepo,
+            IUserRepository userRepo,
+            ICategoryRepository catRepo,
+            ITripAccessRepository tripAccessRepo)
         {
             _context = context;
             Pins = pinRepo;
@@ -32,7 +34,7 @@ namespace TripMapperDAL.Repositories
             Photos = photoRepo;
             Users = userRepo;
             Categories = catRepo;
-            TripAccess = tripAccess;
+            TripAccess = tripAccessRepo;
         }
 
         public async Task<bool> CompleteAsync()
@@ -40,8 +42,8 @@ namespace TripMapperDAL.Repositories
             return await _context.SaveChangesAsync() > 0;
         }
 
-
         public bool HasChanges() => _context.ChangeTracker.HasChanges();
+
         public void ClearTracking()
         {
             _context.ChangeTracker.Clear();

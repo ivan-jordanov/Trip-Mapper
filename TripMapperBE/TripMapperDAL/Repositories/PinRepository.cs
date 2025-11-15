@@ -36,5 +36,21 @@ namespace TripMapperDAL.Repositories
             )
             .ToListAsync();
         }
+
+        public async Task<List<Pin>> GetPinsForTripUpdateAsync(
+            int userId,
+            int tripId,
+            List<string> targetTitlesLower)
+        {
+            return await _context.Pins
+                .Where(p =>
+                    p.UserId == userId &&
+                    (
+                        p.TripId == tripId ||
+                        targetTitlesLower.Contains(p.Title.ToLower())
+                    ))
+                .ToListAsync();
+        }
+
     }
 }

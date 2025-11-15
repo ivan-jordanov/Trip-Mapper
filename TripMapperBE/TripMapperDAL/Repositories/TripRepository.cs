@@ -52,6 +52,14 @@ namespace TripMapperDAL.Repositories
                 .FirstOrDefaultAsync(t => t.Id == id);
         }
 
+        public async Task<Trip?> GetTripWithAccessesAsync(int tripId)
+        {
+            return await _context.Trips
+                .Include(t => t.TripAccesses)
+                .FirstOrDefaultAsync(t => t.Id == tripId);
+        }
+
+
         public void Attach(Trip entity)
         {
             _context.Set<Trip>().Attach(entity);
