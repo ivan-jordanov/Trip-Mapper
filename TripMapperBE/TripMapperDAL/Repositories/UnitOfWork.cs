@@ -18,7 +18,7 @@ namespace TripMapperDAL.Repositories
         public ICategoryRepository Categories { get; }
         public ITripAccessRepository TripAccess { get; }
 
-        public UnitOfWorkSP(TripMapperContext context,
+        public UnitOfWork(TripMapperContext context,
                           IPinRepository pinRepo,
                           ITripRepository tripRepo,
                           IPhotoRepository photoRepo,

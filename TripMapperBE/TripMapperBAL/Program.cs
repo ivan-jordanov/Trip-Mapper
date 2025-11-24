@@ -57,6 +57,7 @@ namespace TripMapper
 
             // Unit of work
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            //builder.Services.AddScoped<IUnitOfWork, UnitOfWorkSP>();
 
             // Controllers and services
             builder.Services.AddControllers();
