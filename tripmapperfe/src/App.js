@@ -5,7 +5,6 @@ import { AppShell } from '@mantine/core';
 
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
-import Sidebar from './components/layout/Sidebar';
 
 import HomePage from './pages/HomePage';
 import TripsPage from './pages/TripsPage';
@@ -19,18 +18,12 @@ function App() {
     <Router>
       <AppShell
         padding="md"
-        header={{ height: 60 }}     
-        navbar={{ width: 250 }}     
-        footer={{ height: 30 }}     
+        styles={{ root: { minHeight: '100vh' }, main: { display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1, paddingTop: 60 } }}
       >
         
-        <AppShell.Header>
+        <AppShell.Header height={60}>
           <Header />
         </AppShell.Header>
-
-        <AppShell.Navbar>
-          <Sidebar />
-        </AppShell.Navbar>
 
         <AppShell.Main>
           <Routes>
