@@ -29,13 +29,13 @@ const Register = () => {
     }
   
     return (
-      <form   onSubmit={form.onSubmit((values) => handleSubmit(values))}>
+      <form  onSubmit={form.onSubmit((values) => handleSubmit(values))}>
         <Flex       justify="center"
         align="center"
         direction="column"
         >
           <TextInput
-            w="35%"
+            
             withAsterisk
             label="Username"
             placeholder="Your username"
@@ -44,7 +44,7 @@ const Register = () => {
           />
 
           <TextInput
-            w="35%"
+            
             label="Nickname"
             placeholder="Your nickname"
             key={form.key('knownAs')}
@@ -52,7 +52,7 @@ const Register = () => {
           />
 
           <Select
-            w="35%"
+            w="83%"
             label="Gender"
             placeholder="Your gender"
             key={form.key('gender')}
@@ -61,7 +61,7 @@ const Register = () => {
           />
 
           <TextInput
-            w="35%"
+            
             label="City"
             placeholder="Your city"
             key={form.key('city')}
@@ -69,7 +69,7 @@ const Register = () => {
           />
 
           <TextInput
-            w="35%"
+            
             label="Country"
             placeholder="Your country"
             key={form.key('country')}
@@ -77,7 +77,7 @@ const Register = () => {
           />
   
           <TextInput
-            w="35%"
+            
             label="Password"
             placeholder="Your password"
             key={form.key('password')}
@@ -86,7 +86,7 @@ const Register = () => {
           />
 
           <TextInput
-            w="35%"
+            
             withAsterisk
             label="Confirm Password"
             placeholder="Confirm your password"

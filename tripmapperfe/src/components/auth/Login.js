@@ -55,7 +55,6 @@ const Login = () => {
       direction="column"
       >
         <TextInput
-          w="35%"
           withAsterisk
           label="Username"
           placeholder="Your username"
@@ -64,7 +63,6 @@ const Login = () => {
         />
 
         <TextInput
-          w="35%"
           withAsterisk
           label="Password"
           placeholder="Your password"
