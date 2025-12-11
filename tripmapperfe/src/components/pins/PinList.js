@@ -61,6 +61,7 @@ const PinList = () => {
     }
   }, [filters, page]);
 
+  // Handle fetch on filters or page change, backend returns all pins instead of paginated
   useEffect(() => {
     fetchPins(filters, page);
   }, [fetchPins, filters, page]);

@@ -1,8 +1,10 @@
 import React, { useRef } from 'react';
 import { Container, Title, Text, Button, Group } from '@mantine/core';
 import MapView from '../components/map/MapView';
+import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
+	const navigate = useNavigate();
 	const mapRef = useRef(null);
 	return (
 		<Container size="md" style={{ paddingTop: 24 }}>
@@ -17,6 +19,7 @@ const HomePage = () => {
 						// Sample call to addPinFromPreview; we pass sample dto, in real app this would come from a form
 						const newPin = mapRef.current.addPinFromPreview({ title: 'Pin from preview', description: 'Created from preview' });
 						console.log('Created pin', newPin);
+						navigate('/pins/create');
 					}
 				}}>Create pin from preview</Button>
 			</Group>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container,
   Card,
@@ -11,6 +11,8 @@ import {
   Group,
   Loader,
   Alert,
+  Button,
+  Modal,
 } from '@mantine/core';
 import {
   IconMapPin,
@@ -21,10 +23,29 @@ import {
 
 const PinDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [pin, setPin] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deleteModalOpened, setDeleteModalOpened] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const altImage = 'https://images.pexels.com/photos/68704/pexels-photo-68704.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
+
+  const handleDelete = async () => {
+    try {
+      setDeleting(true);
+      const res = await fetch(`/api/pins/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        throw new Error('Failed to delete pin');
+      }
+    } catch (e) {
+      // Fallback for dev without backend
+    } finally {
+      setDeleting(false);
+      setDeleteModalOpened(false);
+      navigate('/pins');
+    }
+  };
 
   useEffect(() => {
     const fetchPinDetails = async () => {
@@ -101,6 +122,21 @@ const PinDetail = () => {
 
   return (
     <Container size="sm" py="xl">
+      <Modal opened={deleteModalOpened} onClose={() => setDeleteModalOpened(false)} title="Delete Pin" centered>
+              <Stack spacing="md">
+                <Alert icon={<IconAlertCircle size={16} />} title="Confirm Deletion" color="red">
+                  Are you sure you want to delete this pin? This action cannot be undone.
+                </Alert>
+                <Group justify="flex-end">
+                  <Button variant="default" onClick={() => setDeleteModalOpened(false)}>
+                    Cancel
+                  </Button>
+                  <Button color="red" loading={deleting} onClick={handleDelete}>
+                    Delete Pin
+                  </Button>
+                </Group>
+              </Stack>
+            </Modal>
       <Card shadow="sm" padding="lg" radius="md" withBorder>
         <Stack gap="lg">
           {/* Header with Title and Category */}
@@ -184,6 +220,10 @@ const PinDetail = () => {
               </Group>
             )}
           </Stack>
+
+          <Group justify="flex-end">
+            <Button color="red" variant="light" onClick={() => setDeleteModalOpened(true)}>Delete</Button>
+          </Group>
         </Stack>
       </Card>
     </Container>

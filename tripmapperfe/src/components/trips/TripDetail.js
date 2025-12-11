@@ -12,22 +12,27 @@ import {
   Alert,
   Spoiler,
   SimpleGrid,
+  Button,
+  Modal,
 } from '@mantine/core';
 import {
   IconCalendar,
   IconMapPin,
   IconPhoto,
   IconAlertCircle,
+  IconEdit,
+  IconTrash,
 } from '@tabler/icons-react';
 
 const TripDetail = () => {
   const { id } = useParams();
-
-  // Todo: Fix pin navigation, as I need to decide the purpose of PinsPage & how to pass on data to it
   const navigate = useNavigate();
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isOwner, setIsOwner] = useState(false);
+  const [deleteModalOpened, setDeleteModalOpened] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const altImageTrip = 'https://images.pexels.com/photos/8058392/pexels-photo-8058392.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
   const altImagePin = 'https://images.pexels.com/photos/68704/pexels-photo-68704.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
 
@@ -35,13 +40,23 @@ const TripDetail = () => {
     const fetchTripDetails = async () => {
       try {
         setLoading(true);
-        // Dummy backend call placeholder
+        // Dummy backend call for trip details
         const response = await fetch(`/api/trips/${id}`);
         if (!response.ok) {
           throw new Error('Failed to fetch trip details');
         }
         const data = await response.json();
         setTrip(data);
+        
+        // Dummy call to check ownership
+        const ownerResponse = await fetch(`/api/trips/${id}/is-owner`);
+        if (ownerResponse.ok) {
+          const ownerData = await ownerResponse.json();
+          setIsOwner(ownerData.isOwner || false);
+        } else {
+          // Fallback: assume user 1 is owner for demo (dummy data)
+          setIsOwner(true);
+        }
         setError(null);
       } catch (err) {
         setError(err.message);
@@ -73,6 +88,7 @@ const TripDetail = () => {
             { id: 4, url: 'https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/images/bg-6.png'}
           ],
         });
+        setIsOwner(true); // Assume ownership for dummy data
       } finally {
         setLoading(false);
       }
@@ -117,12 +133,55 @@ const TripDetail = () => {
   const tripPhotos = trip.photos || [];
   const showTripPhotoSpoiler = tripPhotos.length > 3;
 
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/trips/${id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Failed to delete trip');
+      navigate(`/trips`); // Navigate to trips list after deletion
+    } catch (err) {
+      console.error('Delete failed:', err);
+      // Dummy fallback - just navigate
+      navigate('/trips');
+    } finally {
+      setDeleting(false);
+      setDeleteModalOpened(false);
+    }
+  };
+
+  const handleEdit = () => {
+    navigate(`/trips/${id}/edit`);
+    // dummy backend call placeholder
+  };
+
   return (
     <Container size="md" py="xl">
       <Card shadow="sm" padding="lg" radius="md" withBorder>
         <Stack gap="lg">
-          {/* Header with Title */}
-          <Title order={2}>{trip.title}</Title>
+          {/* Header with Title and Action Buttons */}
+          <Group justify="space-between" align="flex-start">
+            <Title order={2}>{trip.title}</Title>
+            {isOwner && (
+              <Group gap="sm">
+                <Button 
+                  variant="light" 
+                  color="blue" 
+                  leftIcon={<IconEdit size={16} />} 
+                  onClick={handleEdit}
+                >
+                  Edit
+                </Button>
+                <Button 
+                  variant="light" 
+                  color="red" 
+                  leftIcon={<IconTrash size={16} />} 
+                  onClick={() => setDeleteModalOpened(true)}
+                >
+                  Delete
+                </Button>
+              </Group>
+            )}
+          </Group>
 
           {/* Trip Photos */}
           {tripPhotos.length > 0 && (
@@ -228,7 +287,7 @@ const TripDetail = () => {
                     p="md" 
                     radius="md" 
                     withBorder
-                    onClick={() => navigate(`/pins`, { state: { id: pin.id } })}
+                    onClick={() => navigate(`/pins/${pin.id}`)}
                     style={{ cursor: 'pointer' }}
                   >
                     <Stack gap="sm">
@@ -260,6 +319,23 @@ const TripDetail = () => {
           )}
         </Stack>
       </Card>
+
+      {/* Delete Confirmation Modal */}
+      <Modal opened={deleteModalOpened} onClose={() => setDeleteModalOpened(false)} title="Delete Trip" centered>
+        <Stack spacing="md">
+          <Alert icon={<IconAlertCircle size={16} />} title="Confirm Deletion" color="red">
+            Are you sure you want to delete this trip? This action cannot be undone.
+          </Alert>
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setDeleteModalOpened(false)}>
+              Cancel
+            </Button>
+            <Button color="red" loading={deleting} onClick={handleDelete}>
+              Delete Trip
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Container>
   );
 };

@@ -9,12 +9,14 @@ import Footer from './components/layout/Footer';
 import HomePage from './pages/HomePage';
 import TripsPage from './pages/TripsPage';
 import TripDetail from './components/trips/TripDetail';
+import TripForm from './components/trips/TripForm';
 import PinsPage from './pages/PinsPage';
 import CategoriesPage from './pages/CategoriesPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import PinDetail from './components/pins/PinDetail';
+import PinForm from './components/pins/PinForm';
 
 function App() {
   return (
@@ -33,9 +35,12 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/trips" element={<TripsPage />} />
             <Route path="/trips/:id" element={<TripDetail />} />
+            <Route path="/trips/create" element={<ProtectedRoute><TripForm /></ProtectedRoute>} />
+            <Route path="/trips/:id/edit" element={<ProtectedRoute><TripForm /></ProtectedRoute>} />
             {/* ProtectedRoute is a higher order component that checks for user authentication */}
             <Route path="/pins" element={<ProtectedRoute><PinsPage /></ProtectedRoute>} />
             <Route path="/pins/:id" element={<ProtectedRoute><PinDetail /></ProtectedRoute>} />
+            <Route path="/pins/create" element={<ProtectedRoute><PinForm /></ProtectedRoute>} />
             <Route path="/categories" element={<CategoriesPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />

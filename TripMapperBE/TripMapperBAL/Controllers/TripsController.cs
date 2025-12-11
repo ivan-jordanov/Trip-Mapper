@@ -80,8 +80,8 @@ namespace TripMapper.Controllers
             if (updated == null) return NotFound();
 
             // Upload photo + set foreign key in photo DB
-            // Currently, there is no backend logic to check if a photo already exists for trip(can handle in frontend for now),
-            // however i need to decide whether to limit 1 photo per trip or multiple for trip/pin
+            // Important todo, check if photo already exists for trip, if so replace it
+            // Also add ability to take in list of photos & upload them all
             if (photo != null)
             {
                 await _photoUploadService.UploadForTripAsync(id, photo, userId);

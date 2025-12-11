@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Group, TextInput, Select, Button } from '@mantine/core';
+import { Group, TextInput, Select, Button, Flex } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
 
 const categories = [
@@ -20,26 +20,27 @@ const PinFilters = ({ onSearch, initialFilters = {} }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Group noWrap>
-        <TextInput
-          placeholder="Search pins by title..."
-          value={query}
-          onChange={(e) => setQuery(e.currentTarget.value)}
-          sx={{ flex: 1 }}
-        />
+      <Group noWrap justify='center'>
+          <TextInput
+            placeholder="Search pins by title..."
+            value={query}
+            onChange={(e) => setQuery(e.currentTarget.value)}
+            sx={{ flex: 1 }}
+          />
 
-        <Select
-          data={categories}
-          placeholder="Category"
-          value={category}
-          onChange={setCategory}
-          clearable
-          sx={{ width: 180 }}
-        />
+          <Select
+            data={categories}
+            placeholder="Category"
+            value={category}
+            onChange={setCategory}
+            clearable
+            sx={{ width: 180 }}
+          />
 
-        <Button type="submit" leftSection={<IconSearch size={16} />}>
-          Search
-        </Button>
+          <Button type="submit" leftSection={<IconSearch size={16} />}>
+            Search
+          </Button>
+
       </Group>
     </form>
   );

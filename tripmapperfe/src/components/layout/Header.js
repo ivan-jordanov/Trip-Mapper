@@ -25,7 +25,7 @@ const Header = () => {
                 <IconMapPin size={16} style={{ marginRight: 6 }} /> Pins
               </Anchor>
 
-              <Anchor component={Link} to="/Trips" c="gray.8" style={{ display: 'flex', alignItems: 'center' }}>
+              <Anchor component={Link} to="/trips" c="gray.8" style={{ display: 'flex', alignItems: 'center' }}>
                 <IconBus size={16} style={{ marginRight: 6 }} /> Trips
               </Anchor>
 
