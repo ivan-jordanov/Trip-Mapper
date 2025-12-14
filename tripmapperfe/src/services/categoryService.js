@@ -16,11 +16,6 @@ const categoryService = {
     return response.data;
   },
 
-  update: async (id, categoryData) => {
-    const response = await axios.put(`/categories/${id}`, categoryData);
-    return response.data;
-  },
-
   delete: async (id) => {
     const response = await axios.delete(`/categories/${id}`);
     return response.data;

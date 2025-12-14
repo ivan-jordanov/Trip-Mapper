@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import categoryService from '../services/categoryService';
 
 const useCategories = () => {
+  const [curCategory, setCurCategory] = useState(null);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -19,13 +20,13 @@ const useCategories = () => {
     }
   };
 
-  const createCategory = async (categoryData) => {
+  const fetchCategoryById = async (id) => {
     setLoading(true);
     setError(null);
     try {
-      const newCategory = await categoryService.create(categoryData);
-      setCategories((prev) => [...prev, newCategory]);
-      return newCategory;
+      const data = await categoryService.getById(id);
+      setCurCategory(data);
+      return data;
     } catch (err) {
       setError(err.response?.data?.message || err.message);
       throw err;
@@ -34,15 +35,13 @@ const useCategories = () => {
     }
   };
 
-  const updateCategory = async (id, categoryData) => {
+  const createCategory = async (categoryData) => {
     setLoading(true);
     setError(null);
     try {
-      const updated = await categoryService.update(id, categoryData);
-      setCategories((prev) =>
-        prev.map((cat) => (cat.id === id ? updated : cat))
-      );
-      return updated;
+      const newCategory = await categoryService.create(categoryData);
+      setCategories((prev) => [...prev, newCategory]);
+      return newCategory;
     } catch (err) {
       setError(err.response?.data?.message || err.message);
       throw err;
@@ -65,17 +64,14 @@ const useCategories = () => {
     }
   };
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
   return {
     categories,
+    curCategory,
     loading,
     error,
     fetchCategories,
+    fetchCategoryById,
     createCategory,
-    updateCategory,
     deleteCategory,
   };
 };

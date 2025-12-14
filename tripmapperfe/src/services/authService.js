@@ -2,7 +2,7 @@ import axios from '../api/axios';
 
 const authService = {
   login: async (username, password) => {
-    const response = await axios.post('/auth/login', { username, password });
+    const response = await axios.post('/users/login', { username, password });
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
     }
@@ -10,7 +10,7 @@ const authService = {
   },
 
   register: async (userData) => {
-    const response = await axios.post('/auth/register', userData);
+    const response = await axios.post('/users/register', userData);
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
     }
@@ -22,7 +22,7 @@ const authService = {
   },
 
   getCurrentUser: async () => {
-    const response = await axios.get('/auth/me');
+    const response = await axios.get('/users/me');
     return response.data;
   },
 };

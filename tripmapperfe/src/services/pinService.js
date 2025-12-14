@@ -1,8 +1,11 @@
 import axios from '../api/axios';
 
 const pinService = {
-  getAll: async () => {
-    const response = await axios.get('/pins');
+  getAll: async (title, visitedFrom, createdFrom, category) => {
+    const response = await axios.get('/pins', {
+      params: {
+        title, visitedFrom, createdFrom, category },
+    });
     return response.data;
   },
 
@@ -13,11 +16,6 @@ const pinService = {
 
   create: async (pinData) => {
     const response = await axios.post('/pins', pinData);
-    return response.data;
-  },
-
-  update: async (id, pinData) => {
-    const response = await axios.put(`/pins/${id}`, pinData);
     return response.data;
   },
 

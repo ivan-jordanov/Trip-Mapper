@@ -1,24 +1,43 @@
-import React from 'react';
-import { Card, Text, Stack, Group, Badge, Box } from '@mantine/core';
-import { IconCategory } from '@tabler/icons-react';
+import { Card, Text, Stack, Group, Badge, ActionIcon, Loader } from '@mantine/core';
+import { IconX } from '@tabler/icons-react';
 
-const CategoryList = () => {
-  // Placeholder list visual only
-  const placeholder = [
-    { id: 1, title: 'Food', color: 'blue' },
-    { id: 2, title: 'Museums', color: 'red' },
-    { id: 3, title: 'Parks', color: 'green' },
-  ];
+const CategoryList = ({ categories, loading, onDelete }) => {
+  if (loading) {
+    return (
+      <Group justify="center" py="xl">
+        <Loader />
+      </Group>
+    );
+  }
+
+  if (!categories.length) {
+    return (
+      <Text align="center" c="dimmed" py="xl">
+        No categories found
+      </Text>
+    );
+  }
 
   return (
     <Stack spacing="sm">
-      {placeholder.map((c) => (
-        <Card style={{backgroundColor: c.color}} key={c.id} shadow="xs" padding="sm">
+      {categories.map((c) => (
+        <Card
+          key={c.id}
+          shadow="xs"
+          padding="sm"
+          style={{ backgroundColor: c.color }}
+        >
           <Group position="apart">
-            <Group spacing={6} align="center">
-              <Text fw={500}>{c.title}</Text>
-            </Group>
-            <Badge color="black" variant="light">3</Badge>
+            <Text fw={500}>{c.title}</Text>
+
+            <ActionIcon
+              size="sm"
+              color="red"
+              variant="subtle"
+              onClick={() => onDelete(c.id)}
+            >
+              <IconX size={14} />
+            </ActionIcon>
           </Group>
         </Card>
       ))}

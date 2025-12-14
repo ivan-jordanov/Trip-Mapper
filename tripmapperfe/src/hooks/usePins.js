@@ -33,22 +33,7 @@ const usePins = () => {
       setLoading(false);
     }
   };
-
-  const updatePin = async (id, pinData) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const updated = await pinService.update(id, pinData);
-      setPins((prev) => prev.map((pin) => (pin.id === id ? updated : pin)));
-      return updated;
-    } catch (err) {
-      setError(err.response?.data?.message || err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  
   const deletePin = async (id) => {
     setLoading(true);
     setError(null);
