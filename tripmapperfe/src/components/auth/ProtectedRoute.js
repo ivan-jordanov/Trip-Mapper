@@ -1,20 +1,20 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuthContext } from '../../context/AuthContext';
 
 const ProtectedRoute = ({ children }) => {
-  // 1. Placeholder for actual authentication check
-  const isAuthenticated = () => {console.log("Checking authentication")}; // Replace with real auth logic
-  
-  // 2. Deny access and redirect if not authenticated
-  if (!isAuthenticated) {
-    // Redirects the user to the login page
-    return <Navigate to="/login" replace />; 
+  const { isAuthenticated, loading } = useAuthContext();
+  const location = useLocation();
+
+  if (loading) {
+    return null; 
   }
 
-  // 3. Allow access if authenticated
-  return (
-    <React.Fragment>{children}</React.Fragment>
-  );
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  return <React.Fragment>{children}</React.Fragment>;
 };
 
 export default ProtectedRoute;

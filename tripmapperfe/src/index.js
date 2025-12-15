@@ -4,8 +4,10 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { MantineProvider } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
 import 'leaflet/dist/leaflet.css';
 import '@mantine/core/styles.css';
+import '@mantine/notifications/styles.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -26,6 +28,7 @@ root.render(
         defaultRadius: 'md',
       }}
     >
+      <Notifications />
       <App />
     </MantineProvider>
   </React.StrictMode>

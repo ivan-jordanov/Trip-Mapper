@@ -1,4 +1,4 @@
-import {useState, React} from "react";
+import {React} from "react";
 import {
   Card,
   TextInput,
@@ -13,25 +13,8 @@ import {
 } from "@mantine/core";
 import { IconCategory, IconPalette } from '@tabler/icons-react';
 
-// ...existing code removed (duplicate CategoryForm)...
 
-
-const CategoryForm = () => {
-  const [name, setName] = useState("");
-  const [color, setColor] = useState("#228be6");
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setLoading(true);
-    // Dummy backend call (replace later)
-    setTimeout(() => {
-      setLoading(false);
-      setName("");
-      setColor("#228be6");
-      // Optionally show a notification here
-    }, 1000);
-  };
+const CategoryForm = ({handleSubmit, name, setName, color, setColor, loading }) => {
 
   
 
