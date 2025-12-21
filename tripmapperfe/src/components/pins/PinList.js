@@ -25,18 +25,19 @@ const pageSize = 20; // 5 per row * 4 rows
 // }
 
 const PinList = () => {
-  const {categories} = useCategories();
   const {
     pins,
     loading,
     fetchPins,
   } = usePins();
+  const{categories, fetchCategories} = useCategories();
 
   const [filters, setFilters] = useState({ query: '', category: null, dateFrom: '', dateTo: '' });
   const [curPins, setCurPins] = useState([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [categoriesMap, setCategoriesMap] = useState({});
 
   // const fetchPins = useCallback(async (f = filters, p = page) => {
   //   try {
@@ -72,7 +73,12 @@ const PinList = () => {
   useEffect(() => {
     // Potential to do, handle backend pagination later
     fetchPins(filters.query, filters.dateFrom, filters.dateTo, filters.category);
+    fetchCategories();
   }, []);
+
+  useEffect(() => {
+    setCategoriesMap(categories.reduce((map, cat) => { map[cat.id] = cat; return map; }, {}));
+  }, [categories]);
 
   useEffect(() => {
     setTotal(pins.length);
@@ -111,7 +117,7 @@ const PinList = () => {
             ) : (
               <SimpleGrid cols={5} spacing="md" breakpoints={[{ maxWidth: 1200, cols: 4 }, { maxWidth: 900, cols: 3 }, { maxWidth: 600, cols: 2 }] }>
                 {curPins.map(pin => (
-                  <PinCard key={pin.id} pin={pin} />
+                  <PinCard key={pin.id} pin={pin} category={categoriesMap[pin.categoryId]} />
                 ))}
               </SimpleGrid>
             )}

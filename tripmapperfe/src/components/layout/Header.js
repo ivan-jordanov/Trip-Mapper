@@ -15,7 +15,6 @@ import { useAuthContext } from "../../context/AuthContext";
 const Header = () => {
   const small = useMediaQuery("(max-width: 768px)");
   const { user, isAuthenticated, logout } = useAuthContext();
-  console.log(user);
 
   const handleLogout = async () => {
     await logout();

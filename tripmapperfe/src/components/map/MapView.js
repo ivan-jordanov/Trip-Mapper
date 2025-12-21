@@ -1,9 +1,8 @@
-import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { MapContainer, TileLayer, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Box, Button } from '@mantine/core';
 import MapMarker from './MapMarker'; 
-import usePins from '../../hooks/usePins';
 
 // fix marker icon paths for CRA and bundlers
 delete L.Icon.Default.prototype._getIconUrl;
@@ -13,10 +12,14 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
-const ClickHandler = ({ onSetPreview }) => {
+const ClickHandler = ({ onMapClick, onSetPreview }) => {
   useMapEvents({
     click(e) {
-      onSetPreview([e.latlng.lat, e.latlng.lng]);
+      if (onMapClick) {
+        onMapClick(e.latlng);
+      } else {
+        onSetPreview([e.latlng.lat, e.latlng.lng]);
+      }
     }
   });
   return null;
@@ -40,15 +43,12 @@ const Recenter = ({ viewCenter, zoom }) => {
   return null;
 };
 
-const MapView = forwardRef(({ initialCenter = [51.5074, -0.1278], initialZoom = 13 }, ref) => {
+const MapView = ({ initialCenter = [51.5074, -0.1278], initialZoom = 13, pins = [], previewMarker, onMapClick }) => {
   const mapRef = useRef(null);
   // viewCenter: controls the map's visible center (initial geolocation only)
   const [viewCenter, setViewCenter] = useState(initialCenter);
-  const [markers, setMarkers] = useState([
-    { id: 1, position: initialCenter, title: 'Default marker' }
-  ]);
-  // const {pins: markers } = usePins();
-  const [previewMarker, setPreviewMarker] = useState(null);
+  const [localPreview, setLocalPreview] = useState(null);
+  const [userMarker, setUserMarker] = useState(null);
 
   const [permissionState, setPermissionState] = useState(null);
 
@@ -61,7 +61,7 @@ const MapView = forwardRef(({ initialCenter = [51.5074, -0.1278], initialZoom = 
         const coords = [pos.coords.latitude, pos.coords.longitude];
         // only move the map if the user grants geolocation on first load
         setViewCenter(coords);
-        setMarkers([{ id: 'user-default', position: coords, title: 'Your location', meta: { createdBy: 'user-default' } }]);
+        setUserMarker({ id: 'user-default', position: coords, title: 'Your location' });
       },
       (err) => { /* ignore */ },
       { enableHighAccuracy: true, timeout: 5000 }
@@ -104,33 +104,31 @@ const MapView = forwardRef(({ initialCenter = [51.5074, -0.1278], initialZoom = 
 
   // NOTE: Recenter component handles syncing the map view. No legacy setView effect.
 
-  useImperativeHandle(ref, () => ({
-    // Confirm the preview marker and add it to persistent markers
-    addPinFromPreview: (dto) => {
-      if (!previewMarker) return null;
-      const newMarker = {
-        id: Date.now(),
-        position: previewMarker,
-        title: dto?.title ?? 'New pin',
-        meta: { ...(dto ?? {}), createdBy: 'createdByPreview' }
-      };
-      // remove the previous created-by-preview markers before adding a new one
-      setMarkers((m) => [...m.filter(x => x?.meta?.createdBy !== 'createdByPreview'), newMarker]);
-      // No auto-centering when creating a new pin - app-level policy
-      setPreviewMarker(null);
-      return newMarker;
-    },
-    getPreviewLocation: () => previewMarker
-  }));
-
   const onSetPreview = (pos) => {
     // replace previous preview - do not change the map view
     try {
-      setPreviewMarker(pos);
+      setLocalPreview(pos);
     } catch (err) {
       // ignore
     }
   };
+
+  const effectivePreview = previewMarker ?? localPreview;
+
+  const backendMarkers = Array.isArray(pins)
+    ? pins
+        .map((pin) => ({
+          id: pin.id ?? pin._id ?? `${pin.latitude}-${pin.longitude}`,
+          position: [pin.latitude ?? pin.lat, pin.longitude ?? pin.lng],
+          title: pin.title || pin.name || 'Pin',
+        }))
+        .filter((m) => Array.isArray(m.position) && m.position[0] != null && m.position[1] != null)
+    : [];
+
+  const markersToRender = [
+    ...(userMarker ? [userMarker] : []),
+    ...backendMarkers,
+  ];
 
   return (
     <Box id="map" ref={mapContainerRef} sx={{ height: '100%', position: 'relative' }}>
@@ -139,12 +137,12 @@ const MapView = forwardRef(({ initialCenter = [51.5074, -0.1278], initialZoom = 
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <ClickHandler onSetPreview={onSetPreview} />
-        {markers.map((m) => (
+        <ClickHandler onSetPreview={onSetPreview} onMapClick={onMapClick} />
+        {markersToRender.map((m) => (
           <MapMarker key={m.id} id={m.id} position={m.position} title={m.title} />
         ))}
-        {previewMarker && (
-          <MapMarker key={'preview'} id={1} position={previewMarker} title={'Preview pin'} />
+        {effectivePreview && (
+          <MapMarker key={'preview'} id={1} position={effectivePreview} title={'Preview pin'} />
         )}
         {/* ensure recenter happens when viewCenter state changes */}
         <Recenter viewCenter={viewCenter} zoom={initialZoom} />
@@ -157,6 +155,6 @@ const MapView = forwardRef(({ initialCenter = [51.5074, -0.1278], initialZoom = 
       
     </Box>
   );
-});
+};
 
 export default MapView;

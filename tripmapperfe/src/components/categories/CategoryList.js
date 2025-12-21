@@ -2,6 +2,7 @@ import { Card, Text, Stack, Group, Badge, ActionIcon, Loader } from '@mantine/co
 import { IconX } from '@tabler/icons-react';
 
 const CategoryList = ({ categories, loading, onDelete }) => {
+  console.log(categories);
   if (loading) {
     return (
       <Group justify="center" py="xl">
@@ -25,19 +26,21 @@ const CategoryList = ({ categories, loading, onDelete }) => {
           key={c.id}
           shadow="xs"
           padding="sm"
-          style={{ backgroundColor: c.color }}
+          style={{ backgroundColor: c.colorCode }}
+          w={250}
         >
-          <Group position="apart">
-            <Text fw={500}>{c.title}</Text>
+          <Group justify="space-between" align="center">
+            <Text fw={500}>{c.name}</Text>
 
-            <ActionIcon
+            {c.isDefault === false && <ActionIcon
               size="sm"
               color="red"
               variant="subtle"
+              disabled={c.isDefault === true}
               onClick={() => onDelete(c.id)}
             >
               <IconX size={14} />
-            </ActionIcon>
+            </ActionIcon>}
           </Group>
         </Card>
       ))}

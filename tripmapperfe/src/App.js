@@ -34,14 +34,14 @@ function App() {
           <AppShell.Main>
             <Routes>
               <Route path="/" element={<HomePage />} />
-              <Route path="/trips" element={<TripsPage />} />
-              <Route path="/trips/:id" element={<TripDetail />} />
+              <Route path="/trips" element={<ProtectedRoute><TripsPage /></ProtectedRoute>} />
+              <Route path="/trips/:id" element={<ProtectedRoute><TripDetail /></ProtectedRoute>} />
               <Route path="/trips/create" element={<ProtectedRoute><TripForm /></ProtectedRoute>} />
               <Route path="/trips/:id/edit" element={<ProtectedRoute><TripForm /></ProtectedRoute>} />
               <Route path="/pins" element={<ProtectedRoute><PinsPage /></ProtectedRoute>} />
               <Route path="/pins/:id" element={<ProtectedRoute><PinDetail /></ProtectedRoute>} />
               <Route path="/pins/create" element={<ProtectedRoute><PinForm /></ProtectedRoute>} />
-              <Route path="/categories" element={<CategoriesPage />} />
+              <Route path="/categories" element={<ProtectedRoute><CategoriesPage /></ProtectedRoute>} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
             </Routes>

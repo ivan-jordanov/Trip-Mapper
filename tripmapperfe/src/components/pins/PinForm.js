@@ -5,7 +5,7 @@ import { IconUpload, IconX } from '@tabler/icons-react';
 import usePins from '../../hooks/usePins';
 import useCategories from '../../hooks/useCategories';
 import showError from '../../modules/showError';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 // const categories = [
 //   { value: 'Food', label: 'Food' },
@@ -16,9 +16,18 @@ import { useNavigate } from 'react-router-dom';
 
 const PinForm = ({ initialPin = null }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [photoPreview, setPhotoPreview] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
-  const {categories} = useCategories();
+  
+  // Get initialPin from location state if not provided as prop
+  const pinData = initialPin || location.state?.initialPin || null;
+  
+  const {categories, fetchCategories} = useCategories();
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
   const {
     loading,
     createPin,
@@ -27,13 +36,13 @@ const PinForm = ({ initialPin = null }) => {
   const form = useForm({
     mode: 'uncontrolled',
     initialValues: {
-      title: initialPin?.title || '',
-      description: initialPin?.description || '',
-      dateVisited: initialPin?.dateVisited ? new Date(initialPin.dateVisited).toISOString().split('T')[0] : '',
-      categoryId: initialPin?.category?.id?.toString() || '',
-      tripId: initialPin?.trip?.id?.toString() || '',
-      longitude: initialPin?.longitude || '',
-      latitude: initialPin?.latitude || '',
+      title: pinData?.title || '',
+      description: pinData?.description || '',
+      dateVisited: pinData?.dateVisited ? new Date(pinData.dateVisited).toISOString().split('T')[0] : '',
+      categoryId: pinData?.category?.id?.toString() || '',
+      tripId: pinData?.trip?.id?.toString() || '',
+      longitude: pinData?.longitude || '',
+      latitude: pinData?.latitude || '',
       photo: null,
     },
 
@@ -72,10 +81,10 @@ const PinForm = ({ initialPin = null }) => {
   });
 
   useEffect(() => {
-    if (initialPin?.photos && initialPin.photos.length > 0) {
-      setPhotoPreview(initialPin.photos[0].url);
+    if (pinData?.photos && pinData.photos.length > 0) {
+      setPhotoPreview(pinData.photos[0].url);
     }
-  }, [initialPin]);
+  }, [pinData]);
 
   const handlePhotoChange = (file) => {
     setPhotoFile(file);
@@ -102,6 +111,7 @@ const PinForm = ({ initialPin = null }) => {
     formData.append('categoryId', values.categoryId);
     formData.append('longitude', values.longitude);
     formData.append('latitude', values.latitude);
+    formData.append('categoryId', values.categoryId);
 
     if(formData.get('longitude') === '' || formData.get('latitude') === '') {
       showError('Longitude and Latitude are required.');
@@ -140,7 +150,7 @@ const PinForm = ({ initialPin = null }) => {
     <Flex justify="center" align="center" direction="column" py="xl">
       <Card w="50%" p="lg" radius="md" withBorder>
         <Stack spacing="md">
-          <Title order={2}>{initialPin ? 'Edit Pin' : 'Create New Pin'}</Title>
+          <Title order={2}>{pinData ? 'Edit Pin' : 'Create New Pin'}</Title>
 
           <form onSubmit={form.onSubmit((values) => handleSubmit(values))}>
             <Stack spacing="md">

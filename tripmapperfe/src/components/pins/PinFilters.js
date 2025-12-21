@@ -25,7 +25,7 @@ const PinFilters = ({ onSearch, initialFilters = {}, categories }) => {
 
 
           <Select
-            data={categories}
+            data={categories.map(cat => ({ value: cat.id.toString(), label: cat.name }))}
             placeholder="Category"
             value={category}
             onChange={setCategory}

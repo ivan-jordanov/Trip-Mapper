@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import categoryService from '../services/categoryService';
 import showError from '../modules/showError';
+import showStatus from '../modules/showStatus';
 
 const useCategories = () => {
   const [curCategory, setCurCategory] = useState(null);

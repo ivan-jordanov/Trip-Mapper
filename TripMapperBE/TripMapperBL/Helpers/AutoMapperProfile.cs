@@ -8,6 +8,11 @@ namespace TripMapperBL.Helpers
     {
         public AutoMapperProfile()
         {
+            CreateMap<DateTime, DateOnly>()
+                .ConvertUsing(src => DateOnly.FromDateTime(src));
+            CreateMap<DateOnly, DateTime>()
+                .ConvertUsing(src => src.ToDateTime(TimeOnly.MinValue));
+
             CreateMap<User, UserDto>();
 
             CreateMap<Category, CategoryDto>();
@@ -25,7 +30,8 @@ namespace TripMapperBL.Helpers
                 .ForMember(d => d.User, opt => opt.MapFrom(s => s.User))
                 .ForMember(d => d.Photos, opt => opt.MapFrom(s => s.Photos));
 
-            CreateMap<CreatePinDto, Pin>();
+            CreateMap<CreatePinDto, Pin>()
+                .ForMember(dest => dest.Photos, opt => opt.Ignore());
             CreateMap<CreateTripDto, Trip>()
             .ForMember(dest => dest.Pins, opt => opt.Ignore());
             CreateMap<UpdateTripDto, Trip>()

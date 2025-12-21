@@ -1,11 +1,11 @@
 import React from 'react';
 import { Card, Image, Text, Badge, Group } from '@mantine/core';
 import { IconPhoto } from '@tabler/icons-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const placeholder = 'https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/images/bg-8.png';
 
-const PinCard = ({ pin, onClick }) => {
+const PinCard = ({ pin, category, onClick }) => {
   const navigate = useNavigate();
   const handleClick = () => {
     if (onClick) return onClick(pin.id);
@@ -22,9 +22,9 @@ const PinCard = ({ pin, onClick }) => {
 
       <Group position="apart" mt="xs" mb="xs">
         <Text weight={600} size="sm" lineClamp={1}>{pin?.title || 'Untitled'}</Text>
-        {pin?.category && (
-          <Badge color={pin.category.color || 'gray'} variant="filled" size="xs">
-            {pin.category.name}
+        {category && (
+          <Badge color={category.colorCode || 'gray'} variant="filled" size="xs">
+            {category.name}
           </Badge>
         )}
       </Group>

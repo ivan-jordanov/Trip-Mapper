@@ -20,7 +20,7 @@ namespace TripMapperDAL.Repositories
         public async Task<List<Category>> GetCategoriesForUserAsync(int userId)
         {
             return await _context.Categories
-                .Where(c => c.UserId == userId)
+                .Where(c => c.UserId == userId || c.IsDefault == "True")
                 .ToListAsync();
         }
 

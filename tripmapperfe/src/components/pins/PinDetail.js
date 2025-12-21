@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import usePins from '../../hooks/usePins';
+import showError from '../../modules/showError';
+import useCategories from '../../hooks/useCategories';
 import {
   Container,
   Card,
@@ -27,6 +29,11 @@ const PinDetail = () => {
   const navigate = useNavigate();
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const {categories, fetchCategories} = useCategories();
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   const {
     pinDetails: pin,
@@ -68,7 +75,7 @@ const PinDetail = () => {
       showError('No pin ID provided');
     }
   }, [id]);
-
+  
   if (loading) {
     return (
       <Container size="sm" py="xl">
@@ -114,9 +121,9 @@ const PinDetail = () => {
           <div>
             <Group justify="space-between" mb="sm">
               <Title order={2}>{pin.title}</Title>
-              {pin.category && (
-                <Badge color={pin.category.color} variant="filled">
-                  {pin.category.name}
+              {pin.categoryId && (
+                <Badge color={categories.find(cat => cat.id === pin.categoryId)?.colorCode || 'gray'} variant="filled">
+                  {categories.find(cat => cat.id === pin.categoryId)?.name || 'Unknown'}
                 </Badge>
               )}
             </Group>

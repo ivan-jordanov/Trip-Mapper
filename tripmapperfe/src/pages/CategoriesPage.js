@@ -19,13 +19,14 @@ const CategoriesPage = () => {
 
   useEffect(() => {
     fetchCategories();
+    
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData();
     formData.append('name', name);
-    formData.append('color', color);
+    formData.append('colorCode', color);
 
     await createCategory(formData);
 
