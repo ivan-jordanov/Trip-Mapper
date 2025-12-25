@@ -1,7 +1,8 @@
 import axios from '../api/axios';
 
 const tripService = {
-  getAll: async (title, dateFrom) => {
+  getAll: async (title, dateFrom, dateVisited) => {
+    // Note: dateVisited parameter is not used in backend yet
     const response = await axios.get('/Trips', {
       params: {
         title, dateFrom },
@@ -11,6 +12,11 @@ const tripService = {
 
   getById: async (id) => {
     const response = await axios.get(`/Trips/${id}`);
+    return response.data;
+  },
+
+  getAccess: async (id) => {
+    const response = await axios.get(`/Trips/${id}/access`);
     return response.data;
   },
 

@@ -2,10 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { Button, Flex, Group, TextInput, Textarea, Stack, Card, Title, FileInput, Image, Text } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconUpload, IconX } from '@tabler/icons-react';
+import { useParams } from 'react-router-dom';
+import useTrips from '../../hooks/useTrips';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-const TripForm = ({ onSubmit, initialTrip = null, isLoading = false }) => {
+const TripForm = () => {
+  
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const initialTrip = location.state?.initialTrip || null;
   const [photoPreview, setPhotoPreview] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
+
+  const {
+    loading: isLoading,
+    createTrip,
+    updateTrip,
+  } = useTrips();
 
   const form = useForm({
     mode: 'uncontrolled',
@@ -14,9 +28,9 @@ const TripForm = ({ onSubmit, initialTrip = null, isLoading = false }) => {
       description: initialTrip?.description || '',
       dateFrom: initialTrip?.dateFrom ? new Date(initialTrip.dateFrom).toISOString().split('T')[0] : '',
       dateVisited: initialTrip?.dateVisited ? new Date(initialTrip.dateVisited).toISOString().split('T')[0] : '',
-      pins: '',
-      sharedWith: '',
-      photo: null,
+      pins: initialTrip?.pins ? initialTrip.pins.map(p => p.title).join(', ') : '',
+      sharedWith: initialTrip?.sharedWith ? initialTrip.sharedWith.join(', ') : '',
+      photo: initialTrip?.photos && initialTrip.photos.length > 0 ? initialTrip.photos[0].url : null,
     },
 
     validate: {
@@ -72,7 +86,7 @@ const TripForm = ({ onSubmit, initialTrip = null, isLoading = false }) => {
     form.setFieldValue('photo', null);
   };
 
-  const handleSubmit = (values) => {
+  const handleSubmit = async (values) => {
     const formData = new FormData();
     formData.append('title', values.title);
     formData.append('description', values.description || '');
@@ -92,12 +106,14 @@ const TripForm = ({ onSubmit, initialTrip = null, isLoading = false }) => {
     if (photoFile) formData.append('photo', photoFile);
 
     // Very important todo: backend for now doesn't check for existing photo & doesn't allow multiple photos per trip
-    // so fix it later
-    if(initialTrip && initialTrip.id) {
-      formData.append('id', initialTrip.id);
-      // dummy update trip backend call placeholder
+    // also when receiving trip data it only receives the url of the photo, not the file itself, need to handle that properly later
+    if(id && initialTrip) {
+      formData.append('id', id);
+      await updateTrip(id, formData);
+      navigate(`/trips/${id}`);
     } else {
-      // dummy create trip backend call placeholder
+      await createTrip(formData);
+      navigate('/trips');
     }
   };
 
@@ -180,7 +196,7 @@ const TripForm = ({ onSubmit, initialTrip = null, isLoading = false }) => {
 
               <Group position="center" mt="md">
                 <Button type="submit" size="md" loading={isLoading}>
-                  {initialTrip ? 'Update Trip' : 'Create Trip'}
+                  {pin && initialTrip ? 'Update Trip' : 'Create Trip'}
                 </Button>
               </Group>
             </Stack>

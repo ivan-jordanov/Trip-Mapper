@@ -41,6 +41,14 @@ namespace TripMapperBL.Services
             return _mapper.Map<TripDto>(trip);
         }
 
+        public async Task<TripAccessDto?> GetTripAccess(int id, int currentUserId)
+        {
+            var access = await _uow.TripAccess.GetAccessAsync(id, currentUserId);
+            if (access == null) return null;
+
+            return _mapper.Map<TripAccessDto>(access);
+        }
+
         public async Task<TripDto?> CreateTripAsync(CreateTripDto dto, int currentUserId)
         {
             var trip = await _uow.Trips.GetByTitleAsync(dto.Title, currentUserId);

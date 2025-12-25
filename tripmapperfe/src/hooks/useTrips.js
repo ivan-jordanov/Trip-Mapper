@@ -4,6 +4,8 @@ import showError from '../modules/showError';
 import showStatus from '../modules/showStatus';
 
 const useTrips = () => {
+  const [tripDetails, setTripDetails] = useState(null);
+  const [tripAccess, setTripAccess] = useState(null);
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -12,11 +14,41 @@ const useTrips = () => {
     showError(error);
   }
 
-  const fetchTrips = async () => {
+  const fetchTripDetails = async (id) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await tripService.getAll();
+      const trip = await tripService.getById(id);
+      setTripDetails(trip);
+      return trip;
+    } catch (err) {
+      setError(err.response?.data?.message || err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTripAccess = async (id) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const access = await tripService.getAccess(id);
+      setTripAccess(access);
+      return access;
+    } catch (err) {
+      setError(err.response?.data?.message || err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTrips = async (title, dateFrom, dateVisited) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await tripService.getAll(title, dateFrom, dateVisited);
       setTrips(data);
     } catch (err) {
       setError(err.response?.data?.message || err.message);
@@ -78,9 +110,12 @@ const useTrips = () => {
 
   return {
     trips,
+    tripDetails,
     loading,
     error,
     fetchTrips,
+    fetchTripDetails,
+    fetchTripAccess,
     createTrip,
     updateTrip,
     deleteTrip,

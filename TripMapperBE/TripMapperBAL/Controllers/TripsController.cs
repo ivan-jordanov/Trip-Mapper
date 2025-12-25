@@ -45,6 +45,16 @@ namespace TripMapper.Controllers
             return Ok(trip);
         }
 
+        [HttpGet("{id}/access")]
+        public async Task<IActionResult> GetTripAccess(int id)
+        {
+            var userId = User.GetUserId();
+            var access = await _tripService.GetTripAccess(id, userId);
+            if (access == null) return NotFound();
+
+            return Ok(access);
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateTrip([FromForm] CreateTripDto dto, IFormFile? photo)
         {
