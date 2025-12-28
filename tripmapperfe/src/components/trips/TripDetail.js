@@ -169,7 +169,7 @@ const TripDetail = () => {
                 <Button 
                   variant="light" 
                   color="blue" 
-                  leftIcon={<IconEdit size={16} />} 
+                  leftSection={<IconEdit size={16} />} 
                   onClick={handleEdit}
                 >
                   Edit
@@ -177,7 +177,7 @@ const TripDetail = () => {
                 <Button 
                   variant="light" 
                   color="red" 
-                  leftIcon={<IconTrash size={16} />} 
+                  leftSection={<IconTrash size={16} />} 
                   onClick={() => setDeleteModalOpened(true)}
                 >
                   Delete
@@ -325,7 +325,7 @@ const TripDetail = () => {
 
       {/* Delete Confirmation Modal */}
       <Modal opened={deleteModalOpened} onClose={() => setDeleteModalOpened(false)} title="Delete Trip" centered>
-        <Stack spacing="md">
+        <Stack gap="md">
           <Alert icon={<IconAlertCircle size={16} />} title="Confirm Deletion" color="red">
             Are you sure you want to delete this trip? This action cannot be undone.
           </Alert>

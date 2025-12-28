@@ -26,9 +26,9 @@ namespace TripMapperDAL.Repositories
         }
 
 
-        public T? GetById(int id) => _dbSet.Find(id);
+        public virtual T? GetById(int id) => _dbSet.Find(id);
 
-        public async Task<T?> GetByIdAsync(int id)
+        public virtual async Task<T?> GetByIdAsync(int id)
         {
             return await _dbSet.FindAsync(id);
         }

@@ -104,10 +104,6 @@ const useTrips = () => {
     }
   };
 
-  useEffect(() => {
-    fetchTrips();
-  }, []);
-
   return {
     trips,
     tripDetails,

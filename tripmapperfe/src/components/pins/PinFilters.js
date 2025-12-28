@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Group, TextInput, Select, Button, Flex } from '@mantine/core';
+import { Group, TextInput, Select, Button, Stack, Container } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
 
 const PinFilters = ({ onSearch, initialFilters = {}, categories }) => {
@@ -15,34 +15,34 @@ const PinFilters = ({ onSearch, initialFilters = {}, categories }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Group noWrap justify='center'>
-          <TextInput
-            placeholder="Search pins by title..."
-            value={query}
-            onChange={(e) => setQuery(e.currentTarget.value)}
-            sx={{ flex: 1 }}
-          />
+      <Container fluid p={0}>
+        <Stack gap={{ base: 'sm', sm: 'md' }}>
+          <Group grow gap={{ base: 'xs', sm: 'md' }} wrap="wrap">
+            <TextInput
+              placeholder="Search pins by title..."
+              value={query}
+              onChange={(e) => setQuery(e.currentTarget.value)}
+              style={{ minWidth: '150px', flex: 1 }}
+            />
 
+            <Select
+              data={categories.map(cat => ({ value: cat.id.toString(), label: cat.name }))}
+              placeholder="Category"
+              value={category}
+              onChange={setCategory}
+              clearable
+              style={{ minWidth: '150px', flex: 1 }}
+            />
+          </Group>
 
-          <Select
-            data={categories.map(cat => ({ value: cat.id.toString(), label: cat.name }))}
-            placeholder="Category"
-            value={category}
-            onChange={setCategory}
-            clearable
-            sx={{ width: 180 }}
-          />
-
-          {/* Place under the other filters later */}
-          <Group>
-
+          <Group gap={{ base: 'xs', sm: 'md' }} wrap="wrap" align="flex-end">
             <TextInput
               type="date"
               label="From Date"
               placeholder="Start date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.currentTarget.value)}
-              sx={{ flex: 1 }}
+              style={{ minWidth: '150px', flex: 1 }}
             />
             <TextInput
               type="date"
@@ -50,15 +50,17 @@ const PinFilters = ({ onSearch, initialFilters = {}, categories }) => {
               placeholder="End date"
               value={dateTo}
               onChange={(e) => setDateTo(e.currentTarget.value)}
-              sx={{ flex: 1 }}
+              style={{ minWidth: '150px', flex: 1 }}
             />
+            <Button 
+              type="submit" 
+              leftSection={<IconSearch size={16} />}
+            >
+              Search
+            </Button>
           </Group>
-
-          <Button type="submit" leftSection={<IconSearch size={16} />}>
-            Search
-          </Button>
-
-      </Group>
+        </Stack>
+      </Container>
     </form>
   );
 };

@@ -120,6 +120,7 @@ namespace TripMapper
 
             app.UseCors("ReactPolicy");
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();

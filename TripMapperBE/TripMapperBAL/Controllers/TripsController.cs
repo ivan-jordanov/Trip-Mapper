@@ -27,7 +27,7 @@ namespace TripMapper.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetTrips(string title, DateOnly? dateFrom)
+        public async Task<IActionResult> GetTrips(string? title, DateOnly? dateFrom)
         {
             var userId = User.GetUserId();
             var trips = await _tripService.GetAllTripsAsync(userId, title, dateFrom);

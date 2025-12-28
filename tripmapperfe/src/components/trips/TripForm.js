@@ -120,11 +120,11 @@ const TripForm = () => {
   return (
     <Flex justify="center" align="center" direction="column" py="xl">
       <Card w="55%" p="lg" radius="lg" withBorder>
-        <Stack spacing="md">
+        <Stack gap="md">
           <Title order={2}>{initialTrip ? 'Edit Trip' : 'Create New Trip'}</Title>
 
           <form onSubmit={form.onSubmit((values) => handleSubmit(values))}>
-            <Stack spacing="md">
+            <Stack gap="md">
               <TextInput
                 withAsterisk
                 label="Trip Title"
@@ -173,13 +173,13 @@ const TripForm = () => {
                     </Card.Section>
                     <Group position="apart" mt="xs">
                       <Text size="sm">Photo selected</Text>
-                      <Button size="xs" variant="light" color="red" leftIcon={<IconX size={14} />} onClick={handleClearPhoto}>Clear</Button>
+                      <Button size="xs" variant="light" color="red" leftSection={<IconX size={14} />} onClick={handleClearPhoto}>Clear</Button>
                     </Group>
                   </Card>
                 ) : (
                   <FileInput
                     placeholder="Choose cover image"
-                    icon={<IconUpload size={14} />}
+                    leftSection={<IconUpload size={14} />}
                     accept="image/*"
                     onChange={handlePhotoChange}
                   />
@@ -196,7 +196,7 @@ const TripForm = () => {
 
               <Group position="center" mt="md">
                 <Button type="submit" size="md" loading={isLoading}>
-                  {pin && initialTrip ? 'Update Trip' : 'Create Trip'}
+                  {id && initialTrip ? 'Update Trip' : 'Create Trip'}
                 </Button>
               </Group>
             </Stack>

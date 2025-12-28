@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Group, TextInput, Button, Stack, Flex } from '@mantine/core';
+import { Group, TextInput, Button, Stack, Container } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
 
 const TripFilters = ({ onSearch, initialFilters = {} }) => {
@@ -18,31 +18,23 @@ const TripFilters = ({ onSearch, initialFilters = {} }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-
-      <Flex  mih={50}
-      gap="md"
-      
-      justify="center"
-      align="flex-start"
-      direction="row"
-      wrap="nowrap">
-        <Stack>
+      <Container fluid p={0}>
+        <Stack gap={{ base: 'sm', sm: 'md' }}>
           <TextInput
             placeholder="Search trips by title..."
             value={query}
             onChange={(e) => setQuery(e.currentTarget.value)}
-            sx={{ flex: 1 }}
+            style={{ width: '100%' }}
           />
 
-          <Group>
-
+          <Group gap={{ base: 'xs', sm: 'md' }} wrap="wrap" align="flex-end">
             <TextInput
               type="date"
               label="From Date"
               placeholder="Start date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.currentTarget.value)}
-              sx={{ flex: 1 }}
+              style={{ minWidth: '150px', flex: 1 }}
             />
             <TextInput
               type="date"
@@ -50,16 +42,17 @@ const TripFilters = ({ onSearch, initialFilters = {} }) => {
               placeholder="End date"
               value={dateTo}
               onChange={(e) => setDateTo(e.currentTarget.value)}
-              sx={{ flex: 1 }}
+              style={{ minWidth: '150px', flex: 1 }}
             />
+            <Button 
+              type="submit" 
+              leftSection={<IconSearch size={16} />}
+            >
+              Search
+            </Button>
           </Group>
         </Stack>
-
-        <Button type="submit" leftIcon={<IconSearch size={16} />}>
-          Search
-        </Button>
-      </Flex>
-
+      </Container>
     </form>
   );
 };

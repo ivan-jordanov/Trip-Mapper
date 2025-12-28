@@ -11,6 +11,7 @@ import {
   IconBus,
 } from "@tabler/icons-react";
 import { useAuthContext } from "../../context/AuthContext";
+import Sidebar from "./Sidebar";
 
 const Header = () => {
   const small = useMediaQuery("(max-width: 768px)");
@@ -87,35 +88,38 @@ const Header = () => {
               </Anchor>
             </Group>
           )}
+          {small && <Sidebar />}
         </Group>
 
         <Group spacing="xs" align="center" style={{ marginLeft: "auto" }}>
-          {isAuthenticated ? (
-            <>
-              <Text c="dimmed">Welcome, <strong c="dark.2">{user.username}</strong></Text>
-              <Button color="red" variant="outline" onClick={handleLogout}>
-                Log out
-              </Button>
-            </>
-          ) : (
-            <>
-              <Anchor
-                component={Link}
-                to="/login"
-                c="green.6"
-                style={{ display: "flex", alignItems: "center" }}
-              >
-                <IconLogin size={16} style={{ marginRight: 6 }} /> Log in
-              </Anchor>
-              <Anchor
-                component={Link}
-                to="/register"
-                c="green.6"
-                style={{ display: "flex", alignItems: "center" }}
-              >
-                <IconDoorEnter size={16} style={{ marginRight: 6 }} /> Register
-              </Anchor>
-            </>
+          {!small && (
+            isAuthenticated ? (
+              <>
+                <Text c="dimmed">Welcome, <strong c="dark.2">{user.username}</strong></Text>
+                <Button color="red" variant="outline" onClick={handleLogout}>
+                  Log out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Anchor
+                  component={Link}
+                  to="/login"
+                  c="green.6"
+                  style={{ display: "flex", alignItems: "center" }}
+                >
+                  <IconLogin size={16} style={{ marginRight: 6 }} /> Log in
+                </Anchor>
+                <Anchor
+                  component={Link}
+                  to="/register"
+                  c="green.6"
+                  style={{ display: "flex", alignItems: "center" }}
+                >
+                  <IconDoorEnter size={16} style={{ marginRight: 6 }} /> Register
+                </Anchor>
+              </>
+            )
           )}
         </Group>
       </div>

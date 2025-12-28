@@ -14,5 +14,6 @@ namespace TripMapperBL.Interfaces
         Task<TripDto?> CreateTripAsync(CreateTripDto dto, int currentUserId);
         Task<TripDto?> UpdateTripAsync(UpdateTripDto dto, int currentUserId);
         Task<bool> DeleteTripAsync(int id, int currentUserId, byte[] rowVersion);
+        Task<TripAccessDto?> GetTripAccess(int id, int userId);
     }
 }

@@ -12,6 +12,7 @@ namespace TripMapperDAL.Repositories
     public class TripRepository : GenericRepository<Trip>, ITripRepository
     {
         public TripRepository(TripMapperContext context) : base(context) { }
+
         public async Task<Trip?> GetByTitleAsync(string title, int userId)
         {
             return await _context.Trips
@@ -28,20 +29,24 @@ namespace TripMapperDAL.Repositories
 
         public async Task<IEnumerable<Trip>> GetTripsForUserAsync(int userId, string? title, DateOnly? dateFrom)
         {
+            title = string.IsNullOrWhiteSpace(title) ? null : title;
+
             return await _context.TripAccesses
                 .Where(x => x.UserId == userId)
-                .Select(x => x.Trip)
-                .Where(t =>
-                    // Title filter 
-                    (title == null || t.Title.ToLower().Contains(title.ToLower())) &&
-
-                    // Date filter 
+                .Include(x => x.Trip)
+                    .ThenInclude(t => t.Photos)
+                .Where(x =>
+                    (title == null || EF.Functions.Like(x.Trip.Title, $"%{title}%")) &&
                     (!dateFrom.HasValue ||
-                        (t.DateFrom.HasValue && t.DateFrom.Value >= dateFrom.Value) ||
-                        t.DateVisited >= dateFrom.Value)
+                        (x.Trip.DateFrom.HasValue && x.Trip.DateFrom.Value >= dateFrom.Value))
                 )
+                .Select(x => x.Trip)
                 .ToListAsync();
         }
+
+
+
+
 
 
         public async Task<Trip?> GetTripWithDetailsAsync(int id)

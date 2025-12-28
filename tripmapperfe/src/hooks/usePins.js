@@ -72,10 +72,6 @@ const usePins = () => {
     }
   };
 
-  useEffect(() => {
-    fetchPins();
-  }, []);
-
   return {
     pinDetails,
     pins,

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Container, Grid, Title, Box } from '@mantine/core';
 import { IconCategory } from '@tabler/icons-react';
+import { useMediaQuery } from '@mantine/hooks';
 import CategoryList from '../components/categories/CategoryList';
 import CategoryForm from '../components/categories/CategoryForm';
 import useCategories from '../hooks/useCategories';
 
 const CategoriesPage = () => {
+  const small = useMediaQuery("(max-width: 768px)");
   const {
     categories,
     loading,
@@ -24,11 +26,8 @@ const CategoriesPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    formData.append('name', name);
-    formData.append('colorCode', color);
 
-    await createCategory(formData);
+    await createCategory({name, colorCode: color});
 
     setName('');
     setColor('#228be6');
@@ -47,7 +46,7 @@ const CategoriesPage = () => {
       </Box>
 
       <Grid gutter="md">
-        <Grid.Col span={6}>
+        <Grid.Col span={small ? 12 : 6}>
           <CategoryList
             categories={categories}
             loading={loading}
@@ -55,7 +54,7 @@ const CategoriesPage = () => {
           />
         </Grid.Col>
 
-        <Grid.Col span={6}>
+        <Grid.Col span={small ? 12 : 6}>
           <CategoryForm
             handleSubmit={handleSubmit}
             name={name}
