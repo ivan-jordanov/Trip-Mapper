@@ -52,8 +52,8 @@ namespace TripMapperDAL.Repositories
         public async Task<Trip?> GetTripWithDetailsAsync(int id)
         {
             return await _context.Trips
+                .Include(t => t.Photos)
                 .Include(t => t.Pins)
-                    .ThenInclude(p => p.Photos)
                 .FirstOrDefaultAsync(t => t.Id == id);
         }
 

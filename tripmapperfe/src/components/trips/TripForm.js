@@ -94,13 +94,17 @@ const TripForm = () => {
     formData.append('dateVisited', values.dateVisited || '');
     
     if (values.pins) {
-      const pinIds = values.pins.split(',').map(p => p.trim()).filter(p => p);
-      formData.append('pins', JSON.stringify(pinIds));
+      const pinTitles = values.pins.split(',').map(p => p.trim()).filter(p => p);
+      pinTitles.forEach(pinTitle => {
+        formData.append('pins', pinTitle);
+      });
     }
     
     if (values.sharedWith) {
       const usernames = values.sharedWith.split(',').map(u => u.trim()).filter(u => u);
-      formData.append('sharedWith', JSON.stringify(usernames));
+      usernames.forEach(username => {
+        formData.append('sharedUsernames', username);
+      });
     }
     
     if (photoFile) formData.append('photo', photoFile);
@@ -109,6 +113,7 @@ const TripForm = () => {
     // also when receiving trip data it only receives the url of the photo, not the file itself, need to handle that properly later
     if(id && initialTrip) {
       formData.append('id', id);
+      formData.append('rowVersion', initialTrip.rowVersion);
       await updateTrip(id, formData);
       navigate(`/trips/${id}`);
     } else {

@@ -31,8 +31,8 @@ const tripService = {
     return response.data;
   },
 
-  delete: async (id) => {
-    const response = await axios.delete(`/Trips/${id}`);
+  delete: async (id, rowVersion) => {
+    const response = await axios.delete(`/Trips/${id}`, { params: { rowVersion: rowVersion } });
     return response.data;
   },
 };

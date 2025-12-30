@@ -32,41 +32,6 @@ const TripList = () => {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
-  // const fetchTrips = useCallback(async (f = filters, p = page) => {
-  //   try {
-  //     setLoading(true);
-  //     const params = new URLSearchParams({
-  //       query: f.query || '',
-  //       page: p,
-  //       pageSize: pageSize,
-  //       ...(f.dateFrom && { dateFrom: f.dateFrom }),
-  //       ...(f.dateTo && { dateTo: f.dateTo }),
-  //     });
-  //     const response = await fetch(`/api/trips?${params.toString()}`);
-  //     if (!response.ok) throw new Error('Failed to fetch trips');
-  //     const data = await response.json();
-  //     setTrips(data.items || data || []);
-  //     setTotal(data.total || data.length || 0);
-  //   } catch (err) {
-  //     const all = generateDummyTrips(40);
-  //     const filtered = all.filter(trip => {
-  //       const matchesQuery = !f.query || trip.title.toLowerCase().includes(f.query.toLowerCase());
-  //       const matchesDateFrom = !f.dateFrom || new Date(trip.dateFrom) >= new Date(f.dateFrom);
-  //       const matchesDateTo = !f.dateTo || new Date(trip.dateFrom) <= new Date(f.dateTo);
-  //       return matchesQuery && matchesDateFrom && matchesDateTo;
-  //     });
-  //     setTotal(filtered.length);
-  //     const start = (p - 1) * pageSize;
-  //     setTrips(filtered.slice(start, start + pageSize));
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }, [filters, page]);
-
-
-
-
-
   useEffect(() => {
     // Potential to do, handle backend pagination later
     fetchTrips(filters.query, filters.dateFrom, filters.dateTo);
@@ -92,7 +57,6 @@ const TripList = () => {
     const start = (newPage - 1) * pageSize;
     setCurTrips(trips.slice(start, start + pageSize));
   };
-
 
   return (
     <Container fluid p={{ base: 'sm', sm: 'md', md: 'lg' }} style={{ width: '100%' }}>

@@ -108,14 +108,18 @@ const TripDetail = () => {
   // }, [id]);
 
   useEffect(() => {
-  
-      if (id) {
-        fetchTripDetails(id);
-        fetchTripAccess(id);
-      } else {
-        showError('No trip ID provided');
+    if (!id) {
+      showError('No trip ID provided');
+      return;
+    }
+
+    (async () => {
+      const trip = await fetchTripDetails(id);
+      if (trip) {
+        await fetchTripAccess(id);
       }
-    }, [id]);
+    })();
+  }, [id]);
 
   if (loading) {
     return (
@@ -140,12 +144,12 @@ const TripDetail = () => {
   // Collect all photos from trip and pins
   const tripPhotos = trip.photos || [];
   const showTripPhotoSpoiler = tripPhotos.length > 3;
-  const isOwner = tripAccess ? tripAccess.AccessLevel === 'Owner' : false;
+  const isOwner = tripAccess ? tripAccess.accessLevel === 'Owner' : false;
 
   const handleDelete = async () => {
     try {
       setDeleting(true);
-      await deleteTrip(id);
+      await deleteTrip(id, trip.rowVersion);
     }  finally {
       setDeleting(false);
       setDeleteModalOpened(false);
@@ -156,6 +160,7 @@ const TripDetail = () => {
   const handleEdit = () => {
     navigate(`/trips/${id}/edit`);
   };
+  console.log('Trip Details:', trip);
 
   return (
     <Container size="md" py="xl">

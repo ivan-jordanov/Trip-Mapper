@@ -144,7 +144,7 @@ namespace TripMapperBL.Services
             // Attach or detach relationship pin - trip relationship
             foreach (var pin in pins)
             {
-                bool shouldBeInTrip = targetTitles.Contains(pin.Title.ToLower());
+                bool shouldBeInTrip = targetTitles.Contains(pin.Title?.ToLower() ?? string.Empty);
 
                 if (shouldBeInTrip && pin.TripId != trip.Id)
                 {
@@ -217,6 +217,13 @@ namespace TripMapperBL.Services
             var trip = await _uow.Trips.GetByIdAsync(id);
             if (trip == null) return false;
 
+            // Detach all pins from this trip before deleting
+            var pinsInTrip = await _uow.Pins.GetPinsForTripUpdateAsync(currentUserId, id, new List<string>());
+            foreach (var pin in pinsInTrip.Where(p => p.TripId == id))
+            {
+                pin.TripId = null;
+                _uow.Pins.Update(pin);
+            }
 
             try
             {

@@ -21,8 +21,10 @@ const usePins = () => {
       setPinDetails(pin);
       return pin;
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
-      throw err;
+      const message = err.response?.data?.message || err.message || 'Unable to load pin.';
+      setPinDetails(null);
+      setError(message);
+      return null;
     } finally {
       setLoading(false);
     }

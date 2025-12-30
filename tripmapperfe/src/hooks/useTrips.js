@@ -22,8 +22,10 @@ const useTrips = () => {
       setTripDetails(trip);
       return trip;
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
-      throw err;
+      const message = err.response?.data?.message || err.message || 'Unable to load trip.';
+      setTripDetails(null);
+      setError(message);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -37,8 +39,10 @@ const useTrips = () => {
       setTripAccess(access);
       return access;
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
-      throw err;
+      const message = err.response?.data?.message || err.message || 'Unable to load trip access.';
+      setTripAccess(null);
+      setError(message);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -89,11 +93,11 @@ const useTrips = () => {
     }
   };
 
-  const deleteTrip = async (id) => {
+  const deleteTrip = async (id, rowVersion) => {
     setLoading(true);
     setError(null);
     try {
-      await tripService.delete(id);
+      await tripService.delete(id, rowVersion);
       setTrips((prev) => prev.filter((trip) => trip.id !== id));
       showStatus('Trip deleted successfully');
     } catch (err) {
@@ -107,6 +111,7 @@ const useTrips = () => {
   return {
     trips,
     tripDetails,
+    tripAccess,
     loading,
     error,
     fetchTrips,
