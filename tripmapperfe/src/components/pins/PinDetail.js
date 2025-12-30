@@ -55,19 +55,6 @@ const PinDetail = () => {
   };
 
   useEffect(() => {
-    // Dummy data for development
-    // setPin({
-    //   id: id,
-    //   title: 'Sample Pin',
-    //   description: 'This is a sample pin description',
-    //   dateVisited: new Date('2025-12-05'),
-    //   categoryId: 1,
-    //   userId: 1,
-    //   category: { id: 1, name: 'Landmarks', color: '#FF5733' },
-    //   user: { id: 1, username: 'john_doe', email: 'john@example.com' },
-    //   photos: [{ id: 1, url: 'https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/images/bg-8.png' }],
-    //   trip: { id: 1, name: 'Summer Vacation' }
-    // });
 
     if (id) {
       fetchPinDetails(id);
@@ -165,6 +152,20 @@ const PinDetail = () => {
                   </Text>
                   <Text size="sm" c="dimmed">
                     {new Date(pin.dateVisited).toLocaleDateString()}
+                  </Text>
+                </div>
+              </Group>
+            )}
+
+            {pin.createdAt && (
+              <Group gap="xs">
+                <IconCalendar size={18} stroke={1.5} />
+                <div>
+                  <Text fw={500} size="sm">
+                    Date Created
+                  </Text>
+                  <Text size="sm" c="dimmed">
+                    {new Date(pin.createdAt).toLocaleDateString()}
                   </Text>
                 </div>
               </Group>
