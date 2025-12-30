@@ -1,7 +1,7 @@
 import React from "react";
 import { Group, Anchor, Text, Box, Button } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   IconHome,
   IconMapPin,
@@ -16,9 +16,11 @@ import Sidebar from "./Sidebar";
 const Header = () => {
   const small = useMediaQuery("(max-width: 768px)");
   const { user, isAuthenticated, logout } = useAuthContext();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     await logout();
+    navigate("/login");
   }
 
   return (

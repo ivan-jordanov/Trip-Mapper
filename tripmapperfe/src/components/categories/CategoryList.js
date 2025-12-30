@@ -4,7 +4,7 @@ import { IconX, IconArrowLeft, IconArrowRight } from '@tabler/icons-react';
 
 const pageSize = 8;
 
-const CategoryList = ({ categories, loading, onDelete }) => {
+const CategoryList = ({ categories, onDelete }) => {
   const [curCategories, setCurCategories] = useState([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -22,14 +22,6 @@ const CategoryList = ({ categories, loading, onDelete }) => {
     const start = (newPage - 1) * pageSize;
     setCurCategories(categories.slice(start, start + pageSize));
   };
-
-  if (loading) {
-    return (
-      <Group justify="center" py="xl">
-        <Loader />
-      </Group>
-    );
-  }
 
   if (!categories.length) {
     return (

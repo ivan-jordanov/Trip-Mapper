@@ -1,11 +1,11 @@
 import axios from '../api/axios';
 
 const tripService = {
-  getAll: async (title, dateFrom, dateVisited) => {
+  getAll: async (title, dateFrom, dateTo) => {
     const params = {};
     if (title && title.trim()) params.title = title.trim();
     if (dateFrom) params.dateFrom = dateFrom;
-    if (dateVisited) params.dateVisited = dateVisited;
+    if (dateTo) params.dateTo = dateTo;
     
     const response = await axios.get('/Trips', { params });
     return response.data;

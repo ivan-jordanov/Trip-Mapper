@@ -49,7 +49,6 @@ const CategoriesPage = () => {
         <Grid.Col span={small ? 12 : 6}>
           <CategoryList
             categories={categories}
-            loading={loading}
             onDelete={handleDelete}
           />
         </Grid.Col>

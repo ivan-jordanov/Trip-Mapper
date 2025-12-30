@@ -33,7 +33,7 @@ function App() {
 
           <AppShell.Main>
             <Routes>
-              <Route path="/" element={<HomePage />} />
+              <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
               <Route path="/trips" element={<ProtectedRoute><TripsPage /></ProtectedRoute>} />
               <Route path="/trips/:id" element={<ProtectedRoute><TripDetail /></ProtectedRoute>} />
               <Route path="/trips/create" element={<ProtectedRoute><TripForm /></ProtectedRoute>} />

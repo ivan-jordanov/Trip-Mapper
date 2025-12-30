@@ -88,11 +88,9 @@ import { React } from 'react';
 import { Button, Flex, Group, TextInput, Box, Stack } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useAuthContext } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-    const { loading, login } = useAuthContext();
-    const navigate = useNavigate();
+    const { loading, isAuthenticated, login } = useAuthContext();
 
     const form = useForm({
         mode: 'uncontrolled',
@@ -134,7 +132,6 @@ const Login = () => {
 
     async function handleSubmit(values) {
         await login(values.username, values.password);
-        navigate('/');
     }
 
     return (
@@ -164,7 +161,7 @@ const Login = () => {
                     </Stack>
 
                     <Group mt="xl" justify="center" w="100%">
-                        <Button loading={loading} disabled={loading} type="submit">Log in</Button>
+                        <Button loading={loading} disabled={loading || isAuthenticated} type="submit">Log in</Button>
                     </Group>
                 </form>
             </Box>

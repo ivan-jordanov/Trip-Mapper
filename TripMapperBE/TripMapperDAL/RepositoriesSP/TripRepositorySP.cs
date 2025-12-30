@@ -84,7 +84,7 @@ namespace TripMapperDAL.Repositories
         }
 
 
-        public async Task<IEnumerable<Trip>> GetTripsForUserAsync(int userId, string? title, DateOnly? dateFrom)
+        public async Task<IEnumerable<Trip>> GetTripsForUserAsync(int userId, string? title, DateOnly? dateFrom, DateOnly? dateTo)
         {
             var pUserId = new SqlParameter("@UserId", userId);
             var pTitle = new SqlParameter("@Title", (object?)title ?? DBNull.Value);

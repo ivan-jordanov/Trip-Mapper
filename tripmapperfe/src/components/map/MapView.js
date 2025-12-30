@@ -131,8 +131,8 @@ const MapView = ({ initialCenter = [51.5074, -0.1278], initialZoom = 13, pins = 
     <Box id="map" ref={mapContainerRef} sx={{ height: '100%', position: 'relative' }}>
       <MapContainer center={viewCenter} whenCreated={(m) => { mapRef.current = m; try { m.invalidateSize(true); } catch (err) {} }} zoom={initialZoom} style={{ height: '100%', width: '100%' }}>
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, © <a href="https://carto.com/attributions">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
         <ClickHandler onSetPreview={onSetPreview} onMapClick={onMapClick} />
         {markersToRender.map((pin) => (

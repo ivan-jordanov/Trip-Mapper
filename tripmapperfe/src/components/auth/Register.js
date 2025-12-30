@@ -61,7 +61,7 @@ const Register = () => {
 
   async function handleSubmit(values) {
     await register(values);
-    navigate("/");
+    navigate("/login");
   }
 
   return (
