@@ -27,7 +27,7 @@ const TripForm = () => {
       title: initialTrip?.title || '',
       description: initialTrip?.description || '',
       dateFrom: initialTrip?.dateFrom ? new Date(initialTrip.dateFrom).toISOString().split('T')[0] : '',
-      dateVisited: initialTrip?.dateVisited ? new Date(initialTrip.dateVisited).toISOString().split('T')[0] : '',
+      dateTo: initialTrip?.dateTo ? new Date(initialTrip.dateTo).toISOString().split('T')[0] : '',
       pins: initialTrip?.pins ? initialTrip.pins.map(p => p.title).join(', ') : '',
       sharedWith: initialTrip?.sharedWith ? initialTrip.sharedWith.join(', ') : '',
       photo: initialTrip?.photos && initialTrip.photos.length > 0 ? initialTrip.photos[0].url : null,
@@ -48,7 +48,7 @@ const TripForm = () => {
         if (value && new Date(value) > new Date()) return 'Date cannot be in the future';
         return null;
       },
-      dateVisited: (value) => {
+      dateTo: (value) => {
         if (value && new Date(value) > new Date()) return 'Date cannot be in the future';
         return null;
       },
@@ -91,7 +91,7 @@ const TripForm = () => {
     formData.append('title', values.title);
     formData.append('description', values.description || '');
     formData.append('dateFrom', values.dateFrom || '');
-    formData.append('dateVisited', values.dateVisited || '');
+    formData.append('dateTo', values.dateTo || '');
     
     if (values.pins) {
       const pinTitles = values.pins.split(',').map(p => p.trim()).filter(p => p);
@@ -113,6 +113,7 @@ const TripForm = () => {
     // also when receiving trip data it only receives the url of the photo, not the file itself, need to handle that properly later
     if(id && initialTrip) {
       formData.append('id', id);
+      // rowVersion is needed for concurrency control. Eg. to prevent overwriting changes made by others.
       formData.append('rowVersion', initialTrip.rowVersion);
       await updateTrip(id, formData);
       navigate(`/trips/${id}`);
@@ -156,8 +157,8 @@ const TripForm = () => {
                 <TextInput
                   type="date"
                   label="End Date"
-                  key={form.key('dateVisited')}
-                  {...form.getInputProps('dateVisited')}
+                  key={form.key('dateTo')}
+                  {...form.getInputProps('dateTo')}
                 />
               </Group>
 

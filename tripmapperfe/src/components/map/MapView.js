@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MapContainer, TileLayer, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Box, Button } from '@mantine/core';
-import MapMarker from './MapMarker'; 
+import MapMarker from './MapMarker';
+import usePins from '../../hooks/usePins'; 
 
 // fix marker icon paths for CRA and bundlers
 delete L.Icon.Default.prototype._getIconUrl;
@@ -48,11 +49,18 @@ const MapView = ({ initialCenter = [51.5074, -0.1278], initialZoom = 13, pins = 
   // viewCenter: controls the map's visible center (initial geolocation only)
   const [viewCenter, setViewCenter] = useState(initialCenter);
   const [localPreview, setLocalPreview] = useState(null);
-  const [userMarker, setUserMarker] = useState(null);
 
   const [permissionState, setPermissionState] = useState(null);
 
   const mapContainerRef = useRef(null);
+
+  // Fetch pins from backend
+  const { pins: backendPins, loading, fetchPins } = usePins();
+
+  // Fetch pins on mount
+  useEffect(() => {
+    fetchPins();
+  }, []);
 
   const requestPosition = () => {
     if (!navigator.geolocation) return;
@@ -61,7 +69,6 @@ const MapView = ({ initialCenter = [51.5074, -0.1278], initialZoom = 13, pins = 
         const coords = [pos.coords.latitude, pos.coords.longitude];
         // only move the map if the user grants geolocation on first load
         setViewCenter(coords);
-        setUserMarker({ id: 'user-default', position: coords, title: 'Your location' });
       },
       (err) => { /* ignore */ },
       { enableHighAccuracy: true, timeout: 5000 }
@@ -115,20 +122,10 @@ const MapView = ({ initialCenter = [51.5074, -0.1278], initialZoom = 13, pins = 
 
   const effectivePreview = previewMarker ?? localPreview;
 
-  const backendMarkers = Array.isArray(pins)
-    ? pins
-        .map((pin) => ({
-          id: pin.id ?? pin._id ?? `${pin.latitude}-${pin.longitude}`,
-          position: [pin.latitude ?? pin.lat, pin.longitude ?? pin.lng],
-          title: pin.title || pin.name || 'Pin',
-        }))
-        .filter((m) => Array.isArray(m.position) && m.position[0] != null && m.position[1] != null)
-    : [];
-
-  const markersToRender = [
-    ...(userMarker ? [userMarker] : []),
-    ...backendMarkers,
-  ];
+  // Filter pins with valid coordinates only
+  const markersToRender = backendPins.filter(
+    (pin) => pin.latitude != null && pin.longitude != null
+  );
 
   return (
     <Box id="map" ref={mapContainerRef} sx={{ height: '100%', position: 'relative' }}>
@@ -138,11 +135,16 @@ const MapView = ({ initialCenter = [51.5074, -0.1278], initialZoom = 13, pins = 
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <ClickHandler onSetPreview={onSetPreview} onMapClick={onMapClick} />
-        {markersToRender.map((m) => (
-          <MapMarker key={m.id} id={m.id} position={m.position} title={m.title} />
+        {markersToRender.map((pin) => (
+          <MapMarker 
+            key={pin.id} 
+            id={pin.id} 
+            position={[pin.latitude, pin.longitude]} 
+            title={pin.title || 'Pin'} 
+          />
         ))}
         {effectivePreview && (
-          <MapMarker key={'preview'} id={1} position={effectivePreview} title={'Preview pin'} />
+          <MapMarker key={'preview'} id={null} position={effectivePreview} title={'Preview pin'} />
         )}
         {/* ensure recenter happens when viewCenter state changes */}
         <Recenter viewCenter={viewCenter} zoom={initialZoom} />

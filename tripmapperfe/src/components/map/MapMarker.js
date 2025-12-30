@@ -1,5 +1,6 @@
 import React from 'react';
 import { Marker, Popup } from 'react-leaflet';
+import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 
 // Ensure marker icon is set
@@ -11,9 +12,12 @@ L.Icon.Default.mergeOptions({
 });
 
 const MapMarker = ({ id, position, title = 'Pin' }) => {
+  const navigate = useNavigate();
+
   function handleDoubleClick() {
-    alert("Hello");
-    // Todo 
+    if (id) {
+      navigate(`/pins/${id}`);
+    }
   }
 
   return (

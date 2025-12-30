@@ -27,7 +27,7 @@ namespace TripMapperDAL.Repositories
         }
 
 
-        public async Task<IEnumerable<Trip>> GetTripsForUserAsync(int userId, string? title, DateOnly? dateFrom)
+        public async Task<IEnumerable<Trip>> GetTripsForUserAsync(int userId, string? title, DateOnly? dateFrom, DateOnly? dateTo)
         {
             title = string.IsNullOrWhiteSpace(title) ? null : title;
 
@@ -37,9 +37,11 @@ namespace TripMapperDAL.Repositories
                     .ThenInclude(t => t.Photos)
                 .Where(x =>
                     (title == null || EF.Functions.Like(x.Trip.Title, $"%{title}%")) &&
+                    (!dateFrom.HasValue || !dateTo.HasValue || dateFrom.Value < dateTo.Value) &&
                     (!dateFrom.HasValue ||
-                        (x.Trip.DateFrom.HasValue && x.Trip.DateFrom.Value >= dateFrom.Value))
-                )
+                        (x.Trip.DateFrom.HasValue && x.Trip.DateFrom.Value >= dateFrom.Value)) &&
+                    (!dateTo.HasValue ||
+                        (x.Trip.DateVisited.HasValue && x.Trip.DateVisited.Value <= dateTo.Value)))
                 .Select(x => x.Trip)
                 .ToListAsync();
         }

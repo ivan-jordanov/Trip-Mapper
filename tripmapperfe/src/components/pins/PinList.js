@@ -32,7 +32,7 @@ const PinList = () => {
   } = usePins();
   const{categories, fetchCategories} = useCategories();
 
-  const [filters, setFilters] = useState({ query: '', category: null, dateFrom: '', dateTo: '' });
+  const [filters, setFilters] = useState({ query: '', category: null, dateFrom: '', createdFrom: '' });
   const [curPins, setCurPins] = useState([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -90,7 +90,7 @@ const PinList = () => {
   const handleSearch = async (newFilters) => {
     setFilters(newFilters);
     setPage(1);
-    await fetchPins(newFilters.query, newFilters.dateFrom, newFilters.dateTo, newFilters.category);
+    await fetchPins(newFilters.query, newFilters.dateFrom, newFilters.createdFrom, newFilters.category);
   };
 
   const handlePagination = (newPage) => {

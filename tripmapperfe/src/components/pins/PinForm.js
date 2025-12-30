@@ -108,6 +108,7 @@ const PinForm = ({ initialPin = null }) => {
     formData.append('title', values.title);
     formData.append('description', values.description || '');
     formData.append('dateVisited', values.dateVisited || '');
+    formData.append('createdAt', new Date().toISOString());
     formData.append('categoryId', values.categoryId);
     formData.append('longitude', values.longitude);
     formData.append('latitude', values.latitude);

@@ -27,25 +27,11 @@ namespace TripMapperDAL.Repositories
 
         public async Task<IEnumerable<Pin>> GetPinsForUserAsync(int currentUserId, string? title, DateOnly? visitedFrom, DateTime? createdFrom, string? category)
         {
-            //return await _context.Pins
-            //.Where(p => p.UserId == currentUserId)
-            //.Where(p =>
-            //    // Title filter
-            //    (title == null || p.Title.ToLower().Contains(title.ToLower())) &&
-            //    // DateVisited filter
-            //    (!visitedFrom.HasValue ||
-            //        (p.DateVisited.HasValue && p.DateVisited.Value >= visitedFrom.Value)) &&
-            //    // CreatedAt filter
-            //    (!createdFrom.HasValue ||
-            //        (p.CreatedAt.HasValue && p.CreatedAt.Value >= createdFrom.Value)) &&
-            //    // Category filter
-            //    (category == null || p.Category.Name.ToLower() == category.ToLower())
-            //).Include(p => p.Photos)
-            //.ToListAsync();
             return await _context.Pins
             .Where(p => p.UserId == currentUserId)
             .Where(p =>
                 (title == null || EF.Functions.Like(p.Title, $"%{title}%")) &&
+                
                 (!visitedFrom.HasValue ||
                     (p.DateVisited.HasValue && p.DateVisited.Value >= visitedFrom.Value)) &&
                 (!createdFrom.HasValue ||

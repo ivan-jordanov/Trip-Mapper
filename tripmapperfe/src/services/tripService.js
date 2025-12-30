@@ -2,10 +2,10 @@ import axios from '../api/axios';
 
 const tripService = {
   getAll: async (title, dateFrom, dateVisited) => {
-    // Note: dateVisited parameter is not used in backend yet
     const params = {};
     if (title && title.trim()) params.title = title.trim();
     if (dateFrom) params.dateFrom = dateFrom;
+    if (dateVisited) params.dateVisited = dateVisited;
     
     const response = await axios.get('/Trips', { params });
     return response.data;

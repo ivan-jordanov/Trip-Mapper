@@ -6,11 +6,11 @@ const PinFilters = ({ onSearch, initialFilters = {}, categories }) => {
   const [query, setQuery] = useState(initialFilters.query || '');
   const [category, setCategory] = useState(initialFilters.category || null);
   const [dateFrom, setDateFrom] = useState(initialFilters.dateFrom || '');
-  const [dateTo, setDateTo] = useState(initialFilters.dateTo || '');
+  const [createdFrom, setCreatedFrom] = useState(initialFilters.createdFrom || '');
 
   const handleSubmit = (e) => {
     e?.preventDefault();
-    onSearch({ query: query.trim(), category, dateFrom, dateTo });
+    onSearch({ query: query.trim(), category, dateFrom, createdFrom });
   };
 
   return (
@@ -38,18 +38,18 @@ const PinFilters = ({ onSearch, initialFilters = {}, categories }) => {
           <Group gap={{ base: 'xs', sm: 'md' }} wrap="wrap" align="flex-end">
             <TextInput
               type="date"
-              label="From Date"
-              placeholder="Start date"
+              label="Visited from"
+              placeholder="Visited from"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.currentTarget.value)}
               style={{ minWidth: '150px', flex: 1 }}
             />
             <TextInput
               type="date"
-              label="To Date"
-              placeholder="End date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.currentTarget.value)}
+              label="Created from"
+              placeholder="Created from"
+              value={createdFrom}
+              onChange={(e) => setCreatedFrom(e.currentTarget.value)}
               style={{ minWidth: '150px', flex: 1 }}
             />
             <Button 
