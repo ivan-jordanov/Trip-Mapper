@@ -97,7 +97,6 @@ const TripDetail = () => {
   const handleEdit = () => {
     navigate(`/trips/${id}/edit`);
   };
-  console.log('Trip Details:', trip);
 
   return (
     <Container size="md" py="xl">

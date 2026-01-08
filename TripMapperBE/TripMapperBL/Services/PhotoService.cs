@@ -198,6 +198,7 @@ namespace TripMapperBL.Services
             var photo = await _uow.Photos.GetByIdAsync(photoId);
             if (photo == null) return false;
 
+            // Authorization check
             if (photo.PinId.HasValue)
             {
                 var pin = await _uow.Pins.GetByIdAsync((int)photo.PinId);
@@ -209,6 +210,11 @@ namespace TripMapperBL.Services
 
                 var owner = trip?.TripAccesses.Any(a => a.UserId == currentUserId && a.AccessLevel == "Owner") == true;
                 if (!owner) return false;
+            }
+            else
+            {
+                // Orphaned photo with no owner - should not be deleted without proper authorization
+                return false;
             }
 
             _uow.Photos.Delete(photo);

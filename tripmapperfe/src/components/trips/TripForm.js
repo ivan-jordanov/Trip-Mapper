@@ -1,36 +1,45 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Flex, Group, TextInput, Textarea, Stack, Card, Title, FileInput, Image, Text } from '@mantine/core';
+import { Button, Flex, Group, TextInput, Textarea, Stack, Card, Title, FileInput, Image, Text, SimpleGrid, Loader } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconUpload, IconX } from '@tabler/icons-react';
 import { useParams } from 'react-router-dom';
 import useTrips from '../../hooks/useTrips';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const TripForm = () => {
-  
   const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
-  const initialTrip = location.state?.initialTrip || null;
-  const [photoPreview, setPhotoPreview] = useState(null);
-  const [photoFile, setPhotoFile] = useState(null);
-
+  
   const {
+    tripDetails,
     loading: isLoading,
     createTrip,
     updateTrip,
+    fetchTripDetails,
   } = useTrips();
+
+  const [existingPhotos, setExistingPhotos] = useState([]);
+  const [photosToDelete, setPhotosToDelete] = useState([]);
+  const [newPhotos, setNewPhotos] = useState([]);
+  const [newPhotoPreviews, setNewPhotoPreviews] = useState([]);
+  const [photoError, setPhotoError] = useState('');
+
+  const formatDateForInput = (value) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toISOString().split('T')[0];
+  };
 
   const form = useForm({
     mode: 'uncontrolled',
     initialValues: {
-      title: initialTrip?.title || '',
-      description: initialTrip?.description || '',
-      dateFrom: initialTrip?.dateFrom ? new Date(initialTrip.dateFrom).toISOString().split('T')[0] : '',
-      dateTo: initialTrip?.dateTo ? new Date(initialTrip.dateTo).toISOString().split('T')[0] : '',
-      pins: initialTrip?.pins ? initialTrip.pins.map(p => p.title).join(', ') : '',
-      sharedWith: initialTrip?.sharedWith ? initialTrip.sharedWith.join(', ') : '',
-      photo: initialTrip?.photos && initialTrip.photos.length > 0 ? initialTrip.photos[0].url : null,
+      title: '',
+      description: '',
+      dateFrom: '',
+      dateVisited: '',
+      pins: '',
+      sharedWith: '',
     },
 
     validate: {
@@ -48,11 +57,10 @@ const TripForm = () => {
         if (value && new Date(value) > new Date()) return 'Date cannot be in the future';
         return null;
       },
-      dateTo: (value) => {
+      dateVisited: (value) => {
         if (value && new Date(value) > new Date()) return 'Date cannot be in the future';
         return null;
       },
-      
       sharedWith: (value) => {
         if (value) {
           const usernames = value.split(',').map(u => u.trim()).filter(u => u);
@@ -65,33 +73,77 @@ const TripForm = () => {
     },
   });
 
+  // Fetch trip if editing
   useEffect(() => {
-    if (initialTrip?.photos && initialTrip.photos.length > 0) {
-      setPhotoPreview(initialTrip.photos[0].url);
+    if (id && !tripDetails) {
+      fetchTripDetails(id);
     }
-  }, [initialTrip]);
+  }, [id, tripDetails, fetchTripDetails]);
 
-  const handlePhotoChange = (file) => {
-    setPhotoFile(file);
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setPhotoPreview(reader.result);
-      reader.readAsDataURL(file);
+  // Update form when tripDetails changes
+  useEffect(() => {
+    if (tripDetails) {
+      form.setValues({
+        title: tripDetails.title || '',
+        description: tripDetails.description || '',
+        dateFrom: tripDetails.dateFrom ? formatDateForInput(tripDetails.dateFrom) : '',
+        dateVisited: tripDetails.dateVisited ? formatDateForInput(tripDetails.dateVisited) : '',
+        pins: tripDetails.pins ? tripDetails.pins.map(p => p.title).join(', ') : '',
+        sharedWith: tripDetails.sharedWith ? tripDetails.sharedWith.join(', ') : '',
+      });
+      setExistingPhotos(tripDetails.photos || []);
+      setPhotosToDelete([]);
+      setNewPhotos([]);
     }
+  }, [tripDetails]);
+
+  // Generate previews for new photos
+  useEffect(() => {
+    const previews = newPhotos.map(file => ({
+      name: file.name,
+      preview: URL.createObjectURL(file),
+    }));
+    
+    setNewPhotoPreviews(previews);
+    
+    return () => {
+      previews.forEach(p => URL.revokeObjectURL(p.preview));
+    };
+  }, [newPhotos]);
+
+  const remainingSlots = Math.max(0, 5 - (existingPhotos.length + newPhotos.length));
+
+  const handleNewPhotosChange = (files) => {
+    const selectedFiles = Array.isArray(files) ? files : [];
+    const total = existingPhotos.length + selectedFiles.length;
+    if (total > 5) {
+      setPhotoError('You can attach up to 5 photos per trip.');
+      return;
+    }
+    setPhotoError('');
+    setNewPhotos(selectedFiles);
   };
 
-  const handleClearPhoto = () => {
-    setPhotoFile(null);
-    setPhotoPreview(null);
-    form.setFieldValue('photo', null);
+  const handleRemoveExistingPhoto = (photoId) => {
+    setExistingPhotos((prev) => prev.filter((p) => p.id !== photoId));
+    setPhotosToDelete((prev) => (prev.includes(photoId) ? prev : [...prev, photoId]));
+  };
+
+  const handleRemoveNewPhoto = (fileName) => {
+    setNewPhotos((prev) => prev.filter((file) => file.name !== fileName));
   };
 
   const handleSubmit = async (values) => {
+    if (existingPhotos.length + newPhotos.length > 5) {
+      setPhotoError('You can attach up to 5 photos per trip.');
+      return;
+    }
+
     const formData = new FormData();
     formData.append('title', values.title);
     formData.append('description', values.description || '');
     formData.append('dateFrom', values.dateFrom || '');
-    formData.append('dateTo', values.dateTo || '');
+    formData.append('dateVisited', values.dateVisited || '');
     
     if (values.pins) {
       const pinTitles = values.pins.split(',').map(p => p.trim()).filter(p => p);
@@ -107,14 +159,17 @@ const TripForm = () => {
       });
     }
     
-    if (photoFile) formData.append('photo', photoFile);
+    if (photosToDelete.length > 0) {
+      photosToDelete.forEach((photoId) => formData.append('photoIdsToDelete', photoId));
+    }
 
-    // Very important todo: backend for now doesn't check for existing photo & doesn't allow multiple photos per trip
-    // also when receiving trip data it only receives the url of the photo, not the file itself, need to handle that properly later
-    if(id && initialTrip) {
+    newPhotos.forEach((file) => formData.append('photos', file));
+
+    if (id) {
       formData.append('id', id);
-      // rowVersion is needed for concurrency control. Eg. to prevent overwriting changes made by others.
-      formData.append('rowVersion', initialTrip.rowVersion);
+      if (tripDetails?.rowVersion) {
+        formData.append('rowVersion', tripDetails.rowVersion);
+      }
       await updateTrip(id, formData);
       navigate(`/trips/${id}`);
     } else {
@@ -123,11 +178,19 @@ const TripForm = () => {
     }
   };
 
+  if (isLoading && id) {
+    return (
+      <Flex justify="center" align="center" py="xl">
+        <Loader />
+      </Flex>
+    );
+  }
+
   return (
     <Flex justify="center" align="center" direction="column" py="xl">
       <Card w="55%" p="lg" radius="lg" withBorder>
         <Stack gap="md">
-          <Title order={2}>{initialTrip ? 'Edit Trip' : 'Create New Trip'}</Title>
+          <Title order={2}>{id ? 'Edit Trip' : 'Create New Trip'}</Title>
 
           <form onSubmit={form.onSubmit((values) => handleSubmit(values))}>
             <Stack gap="md">
@@ -157,8 +220,8 @@ const TripForm = () => {
                 <TextInput
                   type="date"
                   label="End Date"
-                  key={form.key('dateTo')}
-                  {...form.getInputProps('dateTo')}
+                  key={form.key('dateVisited')}
+                  {...form.getInputProps('dateVisited')}
                 />
               </Group>
 
@@ -171,25 +234,72 @@ const TripForm = () => {
               />
 
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '14px' }}>Cover Photo</label>
-                {photoPreview ? (
-                  <Card p="xs" radius="md" withBorder mb="md">
-                    <Card.Section>
-                      <Image src={photoPreview} alt="cover" height={180} fit="cover" />
-                    </Card.Section>
-                    <Group position="apart" mt="xs">
-                      <Text size="sm">Photo selected</Text>
-                      <Button size="xs" variant="light" color="red" leftSection={<IconX size={14} />} onClick={handleClearPhoto}>Clear</Button>
-                    </Group>
-                  </Card>
-                ) : (
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '14px' }}>Photos (max 5)</label>
+                {existingPhotos.length > 0 && (
+                  <Stack gap="xs" mb="sm">
+                    <Text size="sm" c="dimmed">Existing photos</Text>
+                    <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+                      {existingPhotos.map((photo) => (
+                        <Card key={photo.id} p="xs" radius="md" withBorder>
+                          <Card.Section>
+                            <Image src={photo.url} alt={`trip-${photo.id}`} height={150} fit="cover" />
+                          </Card.Section>
+                          <Button
+                            mt="xs"
+                            size="xs"
+                            variant="light"
+                            color="red"
+                            leftSection={<IconX size={14} />}
+                            onClick={() => handleRemoveExistingPhoto(photo.id)}
+                          >
+                            Remove from trip
+                          </Button>
+                        </Card>
+                      ))}
+                    </SimpleGrid>
+                  </Stack>
+                )}
+
+                <Stack gap="xs">
                   <FileInput
-                    placeholder="Choose cover image"
+                    placeholder={remainingSlots > 0 ? `You can add ${remainingSlots} more photo${remainingSlots === 1 ? '' : 's'}` : 'Photo limit reached'}
                     leftSection={<IconUpload size={14} />}
                     accept="image/*"
-                    onChange={handlePhotoChange}
+                    multiple
+                    clearable
+                    value={newPhotos}
+                    onChange={handleNewPhotosChange}
+                    disabled={remainingSlots === 0}
                   />
-                )}
+                  {photoError && <Text size="sm" c="red">{photoError}</Text>}
+
+                  {newPhotoPreviews.length > 0 && (
+                    <Stack gap="xs">
+                      <Text size="sm" c="dimmed">New photos to upload</Text>
+                      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+                        {newPhotoPreviews.map((item) => (
+                          <Card key={item.name} p="xs" radius="md" withBorder>
+                            <Card.Section>
+                              <Image src={item.preview} alt={item.name} height={150} fit="cover" />
+                            </Card.Section>
+                            <Group justify="space-between" mt="xs" gap="xs">
+                              <Text size="xs" truncate>{item.name}</Text>
+                              <Button
+                                size="xs"
+                                variant="light"
+                                color="red"
+                                leftSection={<IconX size={12} />}
+                                onClick={() => handleRemoveNewPhoto(item.name)}
+                              >
+                                Remove
+                              </Button>
+                            </Group>
+                          </Card>
+                        ))}
+                      </SimpleGrid>
+                    </Stack>
+                  )}
+                </Stack>
               </div>
 
               <TextInput
@@ -202,7 +312,7 @@ const TripForm = () => {
 
               <Group position="center" mt="md">
                 <Button type="submit" size="md" loading={isLoading}>
-                  {id && initialTrip ? 'Update Trip' : 'Create Trip'}
+                  {id ? 'Update Trip' : 'Create Trip'}
                 </Button>
               </Group>
             </Stack>

@@ -15,6 +15,7 @@ namespace TripMapperBL.DTOs
         public DateOnly? DateFrom { get; set; }
         public List<string>? SharedUsernames { get; set; } = new List<string>();
         public List<string>? Pins { get; set; } = new List<string>();
+        public List<int>? PhotoIdsToDelete { get; set; } = new List<int>();
         public byte[] RowVersion { get; set; } = null!;
     }
 }

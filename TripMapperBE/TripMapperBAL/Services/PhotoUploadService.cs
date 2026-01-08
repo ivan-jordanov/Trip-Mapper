@@ -40,26 +40,36 @@ public class PhotoUploadService
 
     public async Task<bool> DeleteAsync(int photoId, string url, int currentUserId)
     {
-        // delete DB record 
-        var ok = await _photoService.DeletePhotoRecordAsync(photoId, currentUserId);
-        if (!ok) return false;
-
-        // try delete from storage 
+        // Delete from storage FIRST
         var key = ExtractKeyFromUrl(url);
         if (!string.IsNullOrWhiteSpace(key))
         {
-            var del = await _s3.DeleteObjectAsync(new DeleteObjectRequest
+            try
             {
-                BucketName = _settings.BucketName,
-                Key = key
-            });
+                var del = await _s3.DeleteObjectAsync(new DeleteObjectRequest
+                {
+                    BucketName = _settings.BucketName,
+                    Key = key
+                });
 
-            // consider 200/204 as success
-            return del.HttpStatusCode == System.Net.HttpStatusCode.OK ||
-                   del.HttpStatusCode == System.Net.HttpStatusCode.NoContent;
+                // Check if deletion was successful (200/204)
+                var storageDeleted = del.HttpStatusCode == System.Net.HttpStatusCode.OK ||
+                                   del.HttpStatusCode == System.Net.HttpStatusCode.NoContent;
+                
+                if (!storageDeleted)
+                {
+                    throw new Exception("Failed to delete photo from storage.");
+                }
+            }
+            catch
+            {
+                throw new Exception("Error occurred while deleting photo from storage.");
+            }
         }
 
-        return true;
+        // Delete DB record after storage deletion
+        var ok = await _photoService.DeletePhotoRecordAsync(photoId, currentUserId);
+        return ok;
     }
 
     private async Task<(string key, string url)> UploadToBackblazeAsync(IFormFile file)
