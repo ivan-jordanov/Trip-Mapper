@@ -25,11 +25,16 @@ namespace TripMapperBL.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<PinDto>> GetAllPinsAsync(int currentUserId, string? title, DateOnly? visitedFrom, DateTime? createdFrom, string? category)
+        public async Task<IEnumerable<PinDto>> GetPinsAsync(int currentUserId, string? title, DateOnly? visitedFrom, DateTime? createdFrom, string? category, int? page, int? pageSize)
         {
-            var pins = await _uow.Pins.GetPinsForUserAsync(currentUserId, title, visitedFrom, createdFrom, category);
+            var pins = await _uow.Pins.GetPinsForUserAsync(currentUserId, title, visitedFrom, createdFrom, category, page, pageSize);
 
             return _mapper.Map<IEnumerable<PinDto>>(pins);
+        }
+
+        public async Task<int> GetPinsCountAsync(int currentUserId, string? title, DateOnly? visitedFrom, DateTime? createdFrom, string? category)
+        {
+            return await _uow.Pins.GetPinsCountForUserAsync(currentUserId, title, visitedFrom, createdFrom, category);
         }
 
         public async Task<PinDto?> GetPinByIdAsync(int id, int currentUserId)

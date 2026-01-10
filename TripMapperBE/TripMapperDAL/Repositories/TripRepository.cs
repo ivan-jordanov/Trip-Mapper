@@ -26,12 +26,11 @@ namespace TripMapperDAL.Repositories
                 );
         }
 
-
-        public async Task<IEnumerable<Trip>> GetTripsForUserAsync(int userId, string? title, DateOnly? dateFrom, DateOnly? dateTo)
+        public async Task<IEnumerable<Trip>> GetTripsForUserAsync(int userId, string? title, DateOnly? dateFrom, DateOnly? dateTo, int? page, int? pageSize)
         {
             title = string.IsNullOrWhiteSpace(title) ? null : title;
 
-            return await _context.TripAccesses
+            var query = _context.TripAccesses
                 .Where(x => x.UserId == userId)
                 .Include(x => x.Trip)
                     .ThenInclude(t => t.Photos)
@@ -43,7 +42,30 @@ namespace TripMapperDAL.Repositories
                     (!dateTo.HasValue ||
                         (x.Trip.DateVisited.HasValue && x.Trip.DateVisited.Value <= dateTo.Value)))
                 .Select(x => x.Trip)
-                .ToListAsync();
+                .OrderBy(t => t.Id);
+
+            int skip = ((page ?? 1) - 1) * (pageSize ?? 50);
+            int take = pageSize ?? 50;
+
+            return await query.Skip(skip).Take(take).ToListAsync();
+        }
+
+        public async Task<int> GetTripsCountForUserAsync(int userId, string? title, DateOnly? dateFrom, DateOnly? dateTo)
+        {
+            title = string.IsNullOrWhiteSpace(title) ? null : title;
+
+            return await _context.TripAccesses
+                .Where(x => x.UserId == userId)
+                .Include(x => x.Trip)
+                .Where(x =>
+                    (title == null || EF.Functions.Like(x.Trip.Title, $"%{title}%")) &&
+                    (!dateFrom.HasValue || !dateTo.HasValue || dateFrom.Value < dateTo.Value) &&
+                    (!dateFrom.HasValue ||
+                        (x.Trip.DateFrom.HasValue && x.Trip.DateFrom.Value >= dateFrom.Value)) &&
+                    (!dateTo.HasValue ||
+                        (x.Trip.DateVisited.HasValue && x.Trip.DateVisited.Value <= dateTo.Value)))
+                .Select(x => x.Trip)
+                .CountAsync();
         }
 
 

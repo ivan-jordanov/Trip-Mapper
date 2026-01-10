@@ -23,12 +23,22 @@ namespace TripMapper.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetPins(string? title, DateOnly? visitedFrom, DateTime? createdFrom, string? category)
+        public async Task<IActionResult> GetPins(string? title, DateOnly? visitedFrom, DateTime? createdFrom, string? category, int? page, int? pageSize)
         {
             var userId = User.GetUserId();
-            var pins = await _pinService.GetAllPinsAsync(userId, title, visitedFrom, createdFrom, category);
+            var pins = await _pinService.GetPinsAsync(userId, title, visitedFrom, createdFrom, category, page, pageSize);
             return Ok(pins);
         }
+        
+
+        [HttpGet("count")]  
+        public async Task<IActionResult> GetPinsCount(string? title, DateOnly? visitedFrom, DateTime? createdFrom, string? category)
+        {
+            var userId = User.GetUserId();
+            var count = await _pinService.GetPinsCountAsync(userId, title, visitedFrom, createdFrom, category);
+            return Ok(new { count });
+        }
+        
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetPin(int id)

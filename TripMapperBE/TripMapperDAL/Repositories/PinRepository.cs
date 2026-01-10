@@ -25,7 +25,26 @@ namespace TripMapperDAL.Repositories
             return await _context.Pins.FirstOrDefaultAsync(u => u.Title == title.ToLower() && u.UserId == userId);
         }
 
-        public async Task<IEnumerable<Pin>> GetPinsForUserAsync(int currentUserId, string? title, DateOnly? visitedFrom, DateTime? createdFrom, string? category)
+        public async Task<IEnumerable<Pin>> GetPinsForUserAsync(int currentUserId, string? title, DateOnly? visitedFrom, DateTime? createdFrom, string? category, int? page, int? pageSize)
+        {
+            return await _context.Pins
+            .Where(p => p.UserId == currentUserId)
+            .Where(p =>
+                (title == null || EF.Functions.Like(p.Title, $"%{title}%")) &&
+                
+                (!visitedFrom.HasValue ||
+                    (p.DateVisited.HasValue && p.DateVisited.Value >= visitedFrom.Value)) &&
+                (!createdFrom.HasValue ||
+                    (p.CreatedAt.HasValue && p.CreatedAt.Value >= createdFrom.Value)) &&
+                (category == null || (p.Category != null && p.Category.Name == category))
+            ).Skip(((page ?? 1) - 1) * (pageSize ?? 50))
+             .Take(pageSize ?? 50)
+            .Include(p => p.Photos)
+            .ToListAsync();
+
+        }
+
+        public async Task<int> GetPinsCountForUserAsync(int currentUserId, string? title, DateOnly? visitedFrom, DateTime? createdFrom, string? category)
         {
             return await _context.Pins
             .Where(p => p.UserId == currentUserId)
@@ -38,8 +57,7 @@ namespace TripMapperDAL.Repositories
                     (p.CreatedAt.HasValue && p.CreatedAt.Value >= createdFrom.Value)) &&
                 (category == null || (p.Category != null && p.Category.Name == category))
             )
-            .Include(p => p.Photos)
-            .ToListAsync();
+            .CountAsync();
 
         }
 

@@ -27,52 +27,21 @@ const pageSize = 20; // 5 per row * 4 rows
 const PinList = () => {
   const {
     pins,
+    pinsCount,
     loading,
     fetchPins,
+    fetchPinsCount
   } = usePins();
   const{categories, fetchCategories} = useCategories();
 
   const [filters, setFilters] = useState({ query: '', category: null, dateFrom: '', createdFrom: '' });
-  const [curPins, setCurPins] = useState([]);
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [categoriesMap, setCategoriesMap] = useState({});
 
-  // const fetchPins = useCallback(async (f = filters, p = page) => {
-  //   try {
-  //     setLoading(true);
-  //     // Dummy backend call placeholder
-  //     // Now im pretty sure the backend returns all the pins instead of per page, so i either need to change that
-  //     // or modify this component to do pagination client-side
-  //     const response = await fetch(`/api/pins?query=${encodeURIComponent(f.query || '')}&category=${f.category || ''}&page=${p}&pageSize=${pageSize}`);
-  //     if (!response.ok) {
-  //       throw new Error('Failed to fetch pins');
-  //     }
-  //     const data = await response.json();
-  //     setPins(data.items || data || []);
-  //     setTotal(data.total || (data.length || 0));
-  //     setError(null);
-  //   } catch (err) {
-  //     // fallback to dummy data
-  //     const all = generateDummyPins(45);
-  //     const filtered = all.filter(pin => {
-  //       const matchesQuery = !f.query || pin.title.toLowerCase().includes(f.query.toLowerCase());
-  //       const matchesCategory = !f.category || pin.category.name === f.category;
-  //       return matchesQuery && matchesCategory;
-  //     });
-  //     setTotal(filtered.length);
-  //     const start = (p - 1) * pageSize;
-  //     setPins(filtered.slice(start, start + pageSize));
-  //     setError(err.message);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }, [filters, page]);
-
   useEffect(() => {
-    // Potential to do, handle backend pagination later
-    fetchPins(filters.query, filters.dateFrom, filters.dateTo, filters.category);
+    fetchPinsCount(filters.query, filters.dateFrom, filters.dateTo, filters.category);
+    fetchPins(filters.query, filters.dateFrom, filters.dateTo, filters.category, page, pageSize);
     fetchCategories();
   }, []);
 
@@ -81,22 +50,20 @@ const PinList = () => {
   }, [categories]);
 
   useEffect(() => {
-    setTotal(pins.length);
-    setTotalPages(Math.max(1, Math.ceil(pins.length / pageSize)));
+    setTotalPages(Math.max(1, Math.ceil(pinsCount / pageSize)));
     setPage(1);
-    setCurPins(pins.slice(0, pageSize));
-  }, [pins]);
+  }, [pinsCount]);
 
   const handleSearch = async (newFilters) => {
     setFilters(newFilters);
     setPage(1);
-    await fetchPins(newFilters.query, newFilters.dateFrom, newFilters.createdFrom, newFilters.category);
+    await fetchPinsCount(newFilters.query, newFilters.dateFrom, newFilters.createdFrom, newFilters.category);
+    await fetchPins(newFilters.query, newFilters.dateFrom, newFilters.createdFrom, newFilters.category, 1, pageSize);
   };
 
-  const handlePagination = (newPage) => {
+  const handlePagination = async(newPage) => {
     setPage(newPage);
-    const start = (newPage - 1) * pageSize;
-    setCurPins(pins.slice(start, start + pageSize));
+    await fetchPins(filters.query, filters.dateFrom, filters.createdFrom, filters.category, newPage, pageSize);
   };
 
   return (
@@ -110,7 +77,7 @@ const PinList = () => {
           </Group>
         ) : (
           <>
-            {curPins.length === 0 ? (
+            {pins.length === 0 ? (
               <Text align="center" c="dimmed" py={{ base: 'lg', sm: 'xl' }} size="sm">
                 No pins found
               </Text>
@@ -119,7 +86,7 @@ const PinList = () => {
                 cols={{ base: 1, xs: 2, sm: 2, md: 3, lg: 4, xl: 5 }}
                 spacing={{ base: 'sm', sm: 'md', md: 'md', lg: 'lg' }}
               >
-                {curPins.map(pin => (
+                {pins.map(pin => (
                   <PinCard key={pin.id} pin={pin} category={categoriesMap[pin.categoryId]} />
                 ))}
               </SimpleGrid>
@@ -149,7 +116,7 @@ const PinList = () => {
             </Group>
             <Group justify="flex-start" mt={{ base: 'sm', sm: 'md' }} style={{ width: '100%' }}>
               <Text size="sm" c="dimmed">
-                {total} result(s)
+                {pinsCount} result(s)
               </Text>
             </Group>
           </>

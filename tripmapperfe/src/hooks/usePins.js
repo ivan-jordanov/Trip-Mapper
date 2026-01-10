@@ -6,6 +6,7 @@ import showStatus from '../modules/showStatus';
 const usePins = () => {
   const [pinDetails, setPinDetails] = useState(null);
   const [pins, setPins] = useState([]);
+  const [pinsCount, setPinsCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -30,16 +31,25 @@ const usePins = () => {
     }
   };
 
-  const fetchPins = async (title, visitedFrom, createdFrom, category) => {
+  const fetchPins = async (title, visitedFrom, createdFrom, category, page, pageSize) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await pinService.getAll(title, visitedFrom, createdFrom, category);
+      const data = await pinService.getAll(title, visitedFrom, createdFrom, category, page, pageSize);
       setPins(data);
     } catch (err) {
       setError(err.response?.data?.message || err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPinsCount = async (title, visitedFrom, createdFrom, category) => {
+    try {
+      const data = await pinService.getCount(title, visitedFrom, createdFrom, category);
+      setPinsCount(data.count || 0);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message);
     }
   };
 
@@ -77,10 +87,12 @@ const usePins = () => {
   return {
     pinDetails,
     pins,
+    pinsCount,
     loading,
     error,
     fetchPinDetails,
     fetchPins,
+    fetchPinsCount,
     createPin,
     deletePin,
   };

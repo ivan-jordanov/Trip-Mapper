@@ -1,8 +1,16 @@
 import axios from '../api/axios';
 
 const pinService = {
-  getAll: async (title, visitedFrom, createdFrom, category) => {
+  getAll: async (title, visitedFrom, createdFrom, category, page, pageSize) => {
     const response = await axios.get('/Pins', {
+      params: {
+        title, visitedFrom, createdFrom, category, page, pageSize },
+    });
+    return response.data;
+  },
+
+  getCount: async (title, visitedFrom, createdFrom, category) => {
+    const response = await axios.get('/Pins/count', {
       params: {
         title, visitedFrom, createdFrom, category },
     });

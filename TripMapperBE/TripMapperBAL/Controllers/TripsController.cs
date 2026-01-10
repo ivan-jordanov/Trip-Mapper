@@ -26,11 +26,19 @@ namespace TripMapper.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetTrips(string? title, DateOnly? dateFrom, DateOnly? dateTo)
+        public async Task<IActionResult> GetTrips(string? title, DateOnly? dateFrom, DateOnly? dateTo, int? page, int? pageSize)
         {
             var userId = User.GetUserId();
-            var trips = await _tripService.GetAllTripsAsync(userId, title, dateFrom, dateTo);
+            var trips = await _tripService.GetTripsAsync(userId, title, dateFrom, dateTo, page, pageSize);
             return Ok(trips);
+        }
+
+        [HttpGet("count")]
+        public async Task<IActionResult> GetTripsCount(string? title, DateOnly? dateFrom, DateOnly? dateTo)
+        {
+            var userId = User.GetUserId();
+            var count = await _tripService.GetTripsCountAsync(userId, title, dateFrom, dateTo);
+            return Ok(new { count });
         }
 
         [HttpGet("{id}")]

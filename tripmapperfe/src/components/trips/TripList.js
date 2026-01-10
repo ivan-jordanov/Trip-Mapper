@@ -25,37 +25,33 @@ const pageSize = 12; // 3 per row * 4 rows
 // };
 
 const TripList = () => {
-  const { trips, loading, fetchTrips } = useTrips();
-  const [curTrips, setCurTrips] = useState([]);
+  const { trips, tripsCount, loading, fetchTrips, fetchTripsCount } = useTrips();
   const [filters, setFilters] = useState({ query: '', dateFrom: null, dateTo: null });
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    // Potential to do, handle backend pagination later
-    fetchTrips(filters.query, filters.dateFrom, filters.dateTo);
+    fetchTripsCount(filters.query, filters.dateFrom, filters.dateTo);
+    fetchTrips(filters.query, filters.dateFrom, filters.dateTo, page, pageSize);
   }, []);
 
 
 
   useEffect(() => {
-    setTotal(trips.length);
-    setTotalPages(Math.max(1, Math.ceil(trips.length / pageSize)));
+    setTotalPages(Math.max(1, Math.ceil((tripsCount || 0) / pageSize)));
     setPage(1);
-    setCurTrips(trips.slice(0, pageSize));
-  }, [trips]);
+  }, [tripsCount]);
 
   const handleSearch = async (newFilters) => {
     setFilters(newFilters);
     setPage(1);
-    await fetchTrips(newFilters.query, newFilters.dateFrom, newFilters.dateTo);
+    await fetchTripsCount(newFilters.query, newFilters.dateFrom, newFilters.dateTo);
+    await fetchTrips(newFilters.query, newFilters.dateFrom, newFilters.dateTo, 1, pageSize);
   };
 
-  const handlePagination = (newPage) => {
+  const handlePagination = async (newPage) => {
     setPage(newPage);
-    const start = (newPage - 1) * pageSize;
-    setCurTrips(trips.slice(start, start + pageSize));
+    await fetchTrips(filters.query, filters.dateFrom, filters.dateTo, newPage, pageSize);
   };
 
   return (
@@ -69,7 +65,7 @@ const TripList = () => {
           </Group>
         ) : (
           <>
-            {curTrips.length === 0 ? (
+            {trips.length === 0 ? (
               <Text align="center" c="dimmed" py={{ base: 'lg', sm: 'xl' }} size="sm">
                 No trips found
               </Text>
@@ -78,7 +74,7 @@ const TripList = () => {
                 cols={{ base: 1, xs: 1, sm: 2, md: 2, lg: 3, xl: 3 }}
                 spacing={{ base: 'sm', sm: 'md', md: 'lg' }}
               >
-                {curTrips.map(trip => (
+                {trips.map(trip => (
                   <TripCard key={trip.id} trip={trip} />
                 ))}
               </SimpleGrid>
@@ -108,7 +104,7 @@ const TripList = () => {
             </Group>
             <Group justify="flex-start" mt={{ base: 'sm', sm: 'md' }} style={{ width: '100%' }}>
               <Text size="sm" c="dimmed">
-                {total} results
+                {tripsCount} result(s)
               </Text>
             </Group>
           </>
