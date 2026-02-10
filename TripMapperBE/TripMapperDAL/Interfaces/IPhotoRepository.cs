@@ -7,5 +7,10 @@ using TripMapperDB.Models;
 
 namespace TripMapperDAL.Interfaces
 {
-    public interface IPhotoRepository : IGenericRepository<Photo> { }
+    public interface IPhotoRepository : IGenericRepository<Photo> 
+    {
+        Task<List<Photo>> GetPhotosByPinIdsAsync(List<int> pinIds);
+        Task<List<Photo>> GetPhotosByPinIdsOrTripIdAsync(List<int> pinIds, int tripId);
+        Task<List<Photo>> GetPhotosByTripIdAsync(int tripId);
+    }
 }

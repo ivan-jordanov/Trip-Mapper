@@ -13,5 +13,6 @@ namespace TripMapperDAL.Interfaces
         Task<int> GetPinsCountForUserAsync(int currentUserId, string? title, DateOnly? visitedFrom, DateTime? createdFrom, string? category);
 
         Task<List<Pin>> GetPinsForTripUpdateAsync(int userId, int tripId, List<string> targetTitlesLower);
+        Task<List<int>> GetPinIdsByTitlesAsync(int userId, List<string> titles);
     }
 }

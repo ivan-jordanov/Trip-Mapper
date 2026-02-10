@@ -47,11 +47,30 @@ namespace TripMapperDAL.Repositories
                 new SqlParameter("@PageSize", pageSize ?? 50)
             };
 
-            return await _context.Pins
+            var pins = await _context.Pins
                 .FromSqlRaw("EXEC dbo.GetPinsForUserPaged @UserId, @Title, @VisitedFrom, @CreatedFrom, @Category, @Page, @PageSize", parameters)
-                .Include(p => p.Photos)
                 .AsNoTracking()
                 .ToListAsync();
+
+            if (pins.Count == 0)
+            {
+                return pins;
+            }
+
+            var pinIds = pins.Select(pin => pin.Id).ToList();
+            var photos = await _context.Photos
+                .Where(photo => photo.PinId.HasValue && pinIds.Contains(photo.PinId.Value))
+                .AsNoTracking()
+                .ToListAsync();
+
+            var photosByPinId = photos.ToLookup(photo => photo.PinId!.Value);
+
+            foreach (var pin in pins)
+            {
+                pin.Photos = photosByPinId[pin.Id].ToList();
+            }
+
+            return pins;
         }
 
         public async Task<int> GetPinsCountForUserAsync(
@@ -70,9 +89,11 @@ namespace TripMapperDAL.Repositories
                 new SqlParameter("@Category", (object?)category ?? DBNull.Value)
             };
 
-            return await _context.Database
+            var counts = await _context.Database
                 .SqlQueryRaw<int>("EXEC dbo.GetPinsForUserCount @UserId, @Title, @VisitedFrom, @CreatedFrom, @Category", parameters)
-                .SingleAsync();
+                .ToListAsync();
+
+            return counts.Single();
         }
 
 
@@ -81,10 +102,28 @@ namespace TripMapperDAL.Repositories
             // SQL Server doesnt accept lists, so send as csv
             string csv = string.Join(",", targetTitlesLower.Select(t => t.ToLower()));
 
+            var pUserId = new SqlParameter("@UserId", userId);
+            var pTripId = new SqlParameter("@TripId", tripId);
+            var pTitleCsv = new SqlParameter("@TitleCsv", csv);
+
             return await _context.Pins
-                .FromSqlRaw("EXEC dbo.Pin_GetForTripUpdate @UserId={0}, @TripId={1}, @TitleCsv={2}",
-                            userId, tripId, csv)
+                .FromSqlRaw("EXEC dbo.Pin_GetForTripUpdate @UserId, @TripId, @TitleCsv", pUserId, pTripId, pTitleCsv)
+                .AsNoTracking()
                 .ToListAsync();
+        }
+
+        public async Task<List<int>> GetPinIdsByTitlesAsync(int userId, List<string> titles)
+        {
+            string csv = string.Join(",", titles.Select(t => t.ToLower()));
+
+            var pUserId = new SqlParameter("@UserId", userId);
+            var pTitleCsv = new SqlParameter("@TitleCsv", csv);
+
+            var result = await _context.Database
+                .SqlQueryRaw<int>("EXEC dbo.Pin_GetIdsByTitles @UserId, @TitleCsv", pUserId, pTitleCsv)
+                .ToListAsync();
+
+            return result;
         }
     }
 }

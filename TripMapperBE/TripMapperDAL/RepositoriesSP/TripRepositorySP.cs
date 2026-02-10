@@ -22,65 +22,90 @@ namespace TripMapperDAL.Repositories
 
             var trips = await _context.Trips
                 .FromSqlRaw("EXEC dbo.Trip_GetByTitleForOwner @Title, @UserId", pTitle, pUserId)
-                .Include(t => t.TripAccesses)
                 .AsNoTracking()
                 .ToListAsync();
 
-            return trips.FirstOrDefault();
+            var trip = trips.FirstOrDefault();
+            if (trip == null)
+            {
+                return null;
+            }
+
+            trip.TripAccesses = await _context.TripAccesses
+                .Where(access => access.TripId == trip.Id)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return trip;
         }
 
         public async Task<Trip?> GetTripWithAccessesAsync(int tripId)
         {
-            using var conn = _context.Database.GetDbConnection();
-            await conn.OpenAsync();
-
-            using var cmd = conn.CreateCommand();
-            cmd.CommandText = "dbo.Trip_GetWithAccesses";
-            cmd.CommandType = CommandType.StoredProcedure;
-
-            var p = cmd.CreateParameter();
-            p.ParameterName = "@TripId";
-            p.Value = tripId;
-            cmd.Parameters.Add(p);
-
-            using var reader = await cmd.ExecuteReaderAsync();
-
-            // SP bara poslozena logika, bidejki vrakjame 2 rezult sets (trip + negovi trip accesses)
-
-            // Result Set 1
-            Trip? trip = null;
-            if (await reader.ReadAsync())
+            var conn = _context.Database.GetDbConnection();
+            var shouldClose = conn.State == ConnectionState.Closed;
+            
+            if (shouldClose)
             {
-                trip = new Trip
-                {
-                    Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                    Title = reader.GetString(reader.GetOrdinal("Title")),
-                    Description = reader["Description"] as string,
-                    DateFrom = reader["DateFrom"] as DateOnly?,
-                    DateVisited = reader["DateVisited"] as DateOnly?,
-                    RowVersion = (byte[])reader["RowVersion"]
-                };
+                await conn.OpenAsync();
             }
 
-            if (trip == null)
-                return null;
-
-            await reader.NextResultAsync();
-
-            // Result Set 2
-            trip.TripAccesses = new List<TripAccess>();
-
-            while (await reader.ReadAsync())
+            try
             {
-                trip.TripAccesses.Add(new TripAccess
-                {
-                    TripId = trip.Id,
-                    UserId = reader.GetInt32(reader.GetOrdinal("UserId")),
-                    AccessLevel = reader.GetString(reader.GetOrdinal("AccessLevel"))
-                });
-            }
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = "dbo.Trip_GetWithAccesses";
+                cmd.CommandType = CommandType.StoredProcedure;
 
-            return trip;
+                var p = cmd.CreateParameter();
+                p.ParameterName = "@TripId";
+                p.Value = tripId;
+                cmd.Parameters.Add(p);
+
+                using var reader = await cmd.ExecuteReaderAsync();
+
+                // SP bara poslozena logika, bidejki vrakjame 2 rezult sets (trip + negovi trip accesses)
+
+                // Result Set 1
+                Trip? trip = null;
+                if (await reader.ReadAsync())
+                {
+                    trip = new Trip
+                    {
+                        Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                        Title = reader.GetString(reader.GetOrdinal("Title")),
+                        Description = reader["Description"] as string,
+                        DateFrom = reader["DateFrom"] as DateOnly?,
+                        DateVisited = reader["DateVisited"] as DateOnly?,
+                        RowVersion = (byte[])reader["RowVersion"]
+                    };
+                }
+
+                if (trip == null)
+                    return null;
+
+                await reader.NextResultAsync();
+
+                // Result Set 2
+                trip.TripAccesses = new List<TripAccess>();
+
+                while (await reader.ReadAsync())
+                {
+                    trip.TripAccesses.Add(new TripAccess
+                    {
+                        TripId = trip.Id,
+                        UserId = reader.GetInt32(reader.GetOrdinal("UserId")),
+                        AccessLevel = reader.GetString(reader.GetOrdinal("AccessLevel"))
+                    });
+                }
+
+                return trip;
+            }
+            finally
+            {
+                if (shouldClose && conn.State == ConnectionState.Open)
+                {
+                    await conn.CloseAsync();
+                }
+            }
         }
 
         public async Task<IEnumerable<Trip>> GetTripsForUserAsync(int userId, string? title, DateOnly? dateFrom, DateOnly? dateTo, int? page, int? pageSize)
@@ -131,12 +156,39 @@ namespace TripMapperDAL.Repositories
 
             var trips = await _context.Trips
                 .FromSqlRaw("EXEC dbo.Trip_GetById @TripId", pId)
-                .Include(t => t.Pins)
-                    .ThenInclude(p => p.Photos)
                 .AsNoTracking()
                 .ToListAsync();
 
-            return trips.FirstOrDefault();
+            var trip = trips.FirstOrDefault();
+            if (trip == null)
+            {
+                return null;
+            }
+
+            var pins = await _context.Pins
+                .Where(pin => pin.TripId == trip.Id)
+                .AsNoTracking()
+                .ToListAsync();
+
+            if (pins.Count > 0)
+            {
+                var pinIds = pins.Select(pin => pin.Id).ToList();
+                var photos = await _context.Photos
+                    .Where(photo => photo.PinId.HasValue && pinIds.Contains(photo.PinId.Value))
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                var photosByPinId = photos.ToLookup(photo => photo.PinId!.Value);
+
+                foreach (var pin in pins)
+                {
+                    pin.Photos = photosByPinId[pin.Id].ToList();
+                }
+            }
+
+            trip.Pins = pins;
+
+            return trip;
         }
 
         public void Attach(Trip entity)

@@ -125,24 +125,6 @@ const PinForm = ({ initialPin = null }) => {
       formData.append('photo', photoFile);
     }
 
-    // Dummy backend call placeholder
-    // fetch(`/api/pins${initialPin ? `/${initialPin.id}` : ''}`, {
-    //   method: initialPin ? 'PUT' : 'POST',
-    //   body: formData,
-    // })
-    //   .then(response => {
-    //     if (!response.ok) throw new Error('Failed to save pin');
-    //     return response.json();
-    //   })
-    //   .then(data => {
-    //     console.log('Pin saved:', data);
-    //     if (onSubmit) onSubmit(data);
-    //   })
-    //   .catch(err => {
-    //     console.error('Error saving pin:', err);
-    //     // Fallback: just call onSubmit with form values
-    //     if (onSubmit) onSubmit(values);
-    //   });
     await createPin(formData);
     navigate('/pins');
   };

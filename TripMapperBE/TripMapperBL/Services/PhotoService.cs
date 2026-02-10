@@ -78,16 +78,11 @@ namespace TripMapperBL.Services
             var owner = trip.TripAccesses.Any(a => a.UserId == currentUserId && a.AccessLevel == "Owner");
             if (!owner) throw new UnauthorizedAccessException();
 
-            var pinIds = await _uow.Pins.Query()
-                .Where(p => p.UserId == currentUserId && titles.Contains(p.Title))
-                .Select(p => p.Id)
-                .ToListAsync();
+            var pinIds = await _uow.Pins.GetPinIdsByTitlesAsync(currentUserId, titles);
 
             if (pinIds.Count == 0) return 0;
 
-            var photos = await _uow.Photos.Query()
-                .Where(ph => ph.PinId != null && pinIds.Contains(ph.PinId.Value))
-                .ToListAsync();
+            var photos = await _uow.Photos.GetPhotosByPinIdsAsync(pinIds);
 
             foreach (var ph in photos)
             {
@@ -119,20 +114,13 @@ namespace TripMapperBL.Services
                 throw new UnauthorizedAccessException();
 
             // Get relevant pins
-            var pinIds = await _uow.Pins.Query()
-                .Where(p => p.UserId == currentUserId && titles.Contains(p.Title))
-                .Select(p => p.Id)
-                .ToListAsync();
+            var pinIds = await _uow.Pins.GetPinIdsByTitlesAsync(currentUserId, titles);
 
             // No matching pins
             if (pinIds.Count == 0) return 0;
 
             // Load ALL photos linked to these pins OR this trip
-            var allPhotos = await _uow.Photos.Query()
-                .Where(ph =>
-                    (ph.PinId != null && pinIds.Contains(ph.PinId.Value)) ||
-                    ph.TripId == tripId)
-                .ToListAsync();
+            var allPhotos = await _uow.Photos.GetPhotosByPinIdsOrTripIdAsync(pinIds, tripId);
 
             int updated = 0;
 
@@ -175,9 +163,7 @@ namespace TripMapperBL.Services
             var owner = trip.TripAccesses.Any(a => a.UserId == currentUserId && a.AccessLevel == "Owner");
             if (!owner) throw new UnauthorizedAccessException("Only owner can modify trip photos.");
 
-            var photos = await _uow.Photos.Query()
-                .Where(ph => ph.TripId == tripId)
-                .ToListAsync();
+            var photos = await _uow.Photos.GetPhotosByTripIdAsync(tripId);
 
             foreach (var ph in photos)
             {
