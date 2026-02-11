@@ -128,8 +128,6 @@ Edit [TripMapperBE/TripMapperBAL/appsettings.json](TripMapperBE/TripMapperBAL/ap
 
 ## Key Paths
 - Backend solution: [TripMapperBE](TripMapperBE) · Frontend app: [tripmapperfe](tripmapperfe)
-- Services: [TripService](TripMapperBE/TripMapperBL/Services/TripService.cs), [PinService](TripMapperBE/TripMapperBL/Services/PinService.cs)
-- Lists: [TripList.js](tripmapperfe/src/components/trips/TripList.js), [PinList.js](tripmapperfe/src/components/pins/PinList.js)
 
 ## License
 See [LICENSE.txt](LICENSE.txt).
