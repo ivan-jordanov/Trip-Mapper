@@ -39,7 +39,8 @@ Trip‑Mapper lets you plan and document trips with pins, photos, and secure sha
 - `Pin`: `Id`, `Title`, `Description`, `Latitude`, `Longitude`, `DateVisited?`, `CreatedAt?`, `Category?`, `TripId?`, `Photos[]`, `UserId`
 - `Photo`: `Id`, `Url`, `FileName`, `PinId?`, `TripId?`
 - `TripAccess`: `TripId`, `UserId`, `AccessLevel` (`Owner`/`View`)
-- `User`, `Category`: standard entities used by relationships
+- `Category`: `Id`, `Name`, `ColorCode?`, `IsDefault?`, `UserId`, `RowVersion`
+- `User`: `Id`, `Username`, `PasswordHash`, `PasswordSalt`, `City?`, `Country?`, `KnownAs?`
 
 ## API Summary
 Auth
@@ -140,7 +141,7 @@ npm start
 ```
 
 ## Configuration
-Edit [TripMapperBE/TripMapperBAL/appsettings.json](TripMapperBE/TripMapperBAL/appsettings.json) for DB, JWT, and Backblaze credentials. CORS allows `http://localhost:3000` by default (see [Program.cs](TripMapperBE/TripMapperBAL/Program.cs)). Create the TripMapperDB database in SQL Server with the correct entities.
+Edit [TripMapperBE/TripMapperBAL/appsettings.json](TripMapperBE/TripMapperBAL/appsettings.json) for DB, JWT, and Backblaze credentials. Create TripMapperDB database in SQL Server with the correct entities. CORS allows `http://localhost:3000` by default (see [Program.cs](TripMapperBE/TripMapperBAL/Program.cs)).
 
 ## Security
 - Controllers use `[Authorize]`; JWT settings are in `appsettings.json`.
@@ -149,8 +150,6 @@ Edit [TripMapperBE/TripMapperBAL/appsettings.json](TripMapperBE/TripMapperBAL/ap
 
 ## Key Paths
 - Backend solution: [TripMapperBE](TripMapperBE) · Frontend app: [tripmapperfe](tripmapperfe)
-- Services: [TripService](TripMapperBE/TripMapperBL/Services/TripService.cs), [PinService](TripMapperBE/TripMapperBL/Services/PinService.cs)
-- Lists: [TripList.js](tripmapperfe/src/components/trips/TripList.js), [PinList.js](tripmapperfe/src/components/pins/PinList.js)
 
 ## License
 See [LICENSE.txt](LICENSE.txt).
