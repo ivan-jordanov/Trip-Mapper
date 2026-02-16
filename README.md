@@ -151,5 +151,10 @@ Edit [TripMapperBE/TripMapperBAL/appsettings.json](TripMapperBE/TripMapperBAL/ap
 ## Key Paths
 - Backend solution: [TripMapperBE](TripMapperBE) · Frontend app: [tripmapperfe](tripmapperfe)
 
+## Visuals
+![Alt Text](https://imgur.com/a/LYBLx2W)
+
 ## License
 See [LICENSE.txt](LICENSE.txt).
+
+
