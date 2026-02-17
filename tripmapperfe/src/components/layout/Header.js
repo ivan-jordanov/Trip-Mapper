@@ -92,12 +92,13 @@ const Header = () => {
           )}
           {small && <Sidebar />}
         </Group>
+        
 
         <Group spacing="xs" align="center" style={{ marginLeft: "auto" }}>
           {!small && (
             isAuthenticated ? (
               <>
-                <Text c="dimmed">Welcome, <strong c="dark.2">{user.username}</strong></Text>
+                <Text c="dimmed">Welcome, <strong c="dark.2">{user.knownAs}</strong></Text>
                 <Button color="red" variant="outline" onClick={handleLogout}>
                   Log out
                 </Button>

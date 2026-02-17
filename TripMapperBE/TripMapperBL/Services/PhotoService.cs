@@ -139,8 +139,8 @@ namespace TripMapperBL.Services
                 }
                 else
                 {
-                    // Photo no longer belongs to this trip → remove connection
-                    if (ph.TripId != null)
+                    // Photo no longer belongs to this trip via pin relation → remove connection
+                    if (ph.PinId != null && ph.TripId == tripId)
                     {
                         ph.TripId = null;
                         updated++;

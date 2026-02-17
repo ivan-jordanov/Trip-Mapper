@@ -8,6 +8,7 @@
         public DateOnly? DateVisited { get; set; }
         public DateOnly? DateFrom { get; set; }
         public byte[] RowVersion { get; set; }
+        public ICollection<string>? SharedUsernames { get; set; }
         public ICollection<PinDto>? Pins { get; set; }
         public ICollection<PhotoDto>? Photos { get; set; }
     }

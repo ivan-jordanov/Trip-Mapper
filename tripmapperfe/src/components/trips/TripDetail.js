@@ -29,7 +29,7 @@ import showError from '../../modules/showError';
 const TripDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   const {
     tripDetails: trip,
     tripAccess,
@@ -79,7 +79,13 @@ const TripDetail = () => {
   }
 
   // Collect all photos from trip and pins
-  const tripPhotos = trip.photos || [];
+  const tripPhotos = [...(trip.photos || [])].sort((a, b) => {
+    if (!!a.pinId !== !!b.pinId) {
+      return a.pinId ? 1 : -1;
+    }
+    return new Date(b.dateAdded) - new Date(a.dateAdded);
+  });
+
   const showTripPhotoSpoiler = tripPhotos.length > 3;
   const isOwner = tripAccess ? tripAccess.accessLevel === 'Owner' : false;
 
@@ -87,7 +93,7 @@ const TripDetail = () => {
     try {
       setDeleting(true);
       await deleteTrip(id, trip.rowVersion);
-    }  finally {
+    } finally {
       setDeleting(false);
       setDeleteModalOpened(false);
       navigate('/trips');
@@ -107,18 +113,18 @@ const TripDetail = () => {
             <Title order={2}>{trip.title}</Title>
             {isOwner && (
               <Group gap="sm">
-                <Button 
-                  variant="light" 
-                  color="blue" 
-                  leftSection={<IconEdit size={16} />} 
+                <Button
+                  variant="light"
+                  color="blue"
+                  leftSection={<IconEdit size={16} />}
                   onClick={handleEdit}
                 >
                   Edit
                 </Button>
-                <Button 
-                  variant="light" 
-                  color="red" 
-                  leftSection={<IconTrash size={16} />} 
+                <Button
+                  variant="light"
+                  color="red"
+                  leftSection={<IconTrash size={16} />}
                   onClick={() => setDeleteModalOpened(true)}
                 >
                   Delete
@@ -226,13 +232,13 @@ const TripDetail = () => {
               </Group>
               <Stack gap="md">
                 {trip.pins.map(pin => (
-                  <Card 
-                    key={pin.id} 
-                    p="md" 
-                    radius="md" 
+                  <Card
+                    key={pin.id}
+                    p="md"
+                    radius="md"
                     withBorder
-                    onClick={() => navigate(`/pins/${pin.id}`)}
-                    style={{ cursor: 'pointer' }}
+                    {...(isOwner && { onClick: () => navigate(`/pins/${pin.id}`) })}
+                    style={{ cursor: isOwner ? 'pointer' : 'default' }}
                   >
                     <Stack gap="sm">
                       <Text fw={500}>{pin.title}</Text>
