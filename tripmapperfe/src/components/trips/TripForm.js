@@ -89,7 +89,9 @@ const TripForm = () => {
         dateFrom: tripDetails.dateFrom ? formatDateForInput(tripDetails.dateFrom) : '',
         dateVisited: tripDetails.dateVisited ? formatDateForInput(tripDetails.dateVisited) : '',
         pins: tripDetails.pins ? tripDetails.pins.map(p => p.title).join(', ') : '',
-        sharedWith: tripDetails.sharedWith ? tripDetails.sharedWith.join(', ') : '',
+        sharedWith: (tripDetails.sharedUsernames || tripDetails.sharedWith)
+          ? (tripDetails.sharedUsernames || tripDetails.sharedWith).join(', ')
+          : '',
       });
       setExistingPhotos(tripDetails.photos || []);
       setPhotosToDelete([]);

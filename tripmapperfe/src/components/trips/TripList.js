@@ -7,22 +7,7 @@ import useTrips from '../../hooks/useTrips';
 
 const pageSize = 12; // 3 per row * 4 rows
 
-// const generateDummyTrips = (count = 30) => {
-//   const images = [
-//     'https://images.pexels.com/photos/8058392/pexels-photo-8058392.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
-//     'https://images.pexels.com/photos/4551152/pexels-photo-4551152.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
-//     'https://images.pexels.com/photos/1619317/pexels-photo-1619317.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1',
-//   ];
-//   return Array.from({ length: count }).map((_, i) => ({
-//     id: i + 1,
-//     title: `Trip ${i + 1}`,
-//     description: `Explore beautiful destinations on trip ${i + 1}`,
-//     dateFrom: new Date(2025, 0, 1 + (i % 365)).toISOString().split('T')[0],
-//     dateVisited: new Date(2025, 0, 15 + (i % 350)).toISOString().split('T')[0],
-//     photos: [{ id: i + 1, url: images[i % images.length] }],
-//     pins: Array.from({ length: Math.floor(Math.random() * 5) + 1 }).map((_, j) => ({ id: j + 1, title: `Pin ${j + 1}` }))
-//   }));
-// };
+
 
 const TripList = () => {
   const { trips, tripsCount, loading, fetchTrips, fetchTripsCount } = useTrips();

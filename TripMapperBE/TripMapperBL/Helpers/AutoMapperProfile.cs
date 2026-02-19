@@ -23,6 +23,9 @@ namespace TripMapperBL.Helpers
             CreateMap<TripAccess, TripAccessDto>();
 
             CreateMap<Trip, TripDto>()
+                .ForMember(d => d.SharedUsernames, opt => opt.MapFrom(s => s.TripAccesses
+                    .Where(a => a.AccessLevel == "View")
+                    .Select(a => a.User.Username)))
                 .ForMember(d => d.Pins, opt => opt.MapFrom(s => s.Pins))
                 .ForMember(d => d.Photos, opt => opt.MapFrom(s => s.Photos));
 

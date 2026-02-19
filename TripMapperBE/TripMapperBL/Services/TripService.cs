@@ -62,6 +62,9 @@ namespace TripMapperBL.Services
             {
                 return null;
             }
+
+            await ValidatePinsAvailableForTripAsync(dto.Pins, currentUserId, null);
+
             trip = _mapper.Map<Trip>(dto);
 
 
@@ -134,6 +137,8 @@ namespace TripMapperBL.Services
 
             var trip = await _uow.Trips.GetByIdAsync(dto.Id);
             if (trip == null) return null;
+
+            await ValidatePinsAvailableForTripAsync(dto.Pins, currentUserId, dto.Id);
 
             // Correct trip - pins relationships
 
@@ -210,6 +215,28 @@ namespace TripMapperBL.Services
             }
 
             return _mapper.Map<TripDto>(trip);
+        }
+
+        private async Task ValidatePinsAvailableForTripAsync(IEnumerable<string>? pinTitles, int currentUserId, int? currentTripId)
+        {
+            if (pinTitles == null) return;
+
+            var uniqueTitles = pinTitles
+                .Where(t => !string.IsNullOrWhiteSpace(t))
+                .Select(t => t.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            foreach (var title in uniqueTitles)
+            {
+                var pin = await _uow.Pins.GetByTitleAsync(title, currentUserId);
+                if (pin == null) continue;
+
+                if (pin.TripId.HasValue && pin.TripId.Value != currentTripId)
+                {
+                    throw new ArgumentException($"Pin '{title}' is already assigned to another trip.");
+                }
+            }
         }
 
         public async Task<bool> DeleteTripAsync(int id, int currentUserId, byte[] rowVersion)

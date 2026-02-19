@@ -76,5 +76,15 @@ namespace TripMapperDAL.Repositories
                            (p.Title != null && targetTitlesLower.Contains(p.Title.ToLower())))
                 .ToList();
         }
+
+        public async Task<List<int>> GetPinIdsByTitlesAsync(int userId, List<string> titles)
+        {
+            var lowerTitles = titles.Select(t => t.ToLower()).ToList();
+            
+            return await _context.Pins
+                .Where(p => p.UserId == userId && p.Title != null && lowerTitles.Contains(p.Title.ToLower()))
+                .Select(p => p.Id)
+                .ToListAsync();
+        }
     }
 }

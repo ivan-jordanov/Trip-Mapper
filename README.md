@@ -27,20 +27,43 @@ Trip‑Mapper lets you plan and document trips with pins, photos, and secure sha
 	- [TripMapperBE/TripMapper/Models](TripMapperBE/TripMapper/Models)
 - DI & Config: service registrations, CORS, JWT
 	- [Program.cs](TripMapperBE/TripMapperBAL/Program.cs)
+- Frontend (React): routing + page composition + feature components
+	- App shell + routes: [tripmapperfe/src/App.js](tripmapperfe/src/App.js)
+	- Pages: [tripmapperfe/src/pages](tripmapperfe/src/pages)
+	- Components (feature UI): [tripmapperfe/src/components](tripmapperfe/src/components)
+	- Hooks + auth state: [tripmapperfe/src/hooks](tripmapperfe/src/hooks), [tripmapperfe/src/context/AuthContext.js](tripmapperfe/src/context/AuthContext.js)
+	- API + services: [tripmapperfe/src/api/axios.js](tripmapperfe/src/api/axios.js), [tripmapperfe/src/services](tripmapperfe/src/services), [tripmapperfe/src/modules](tripmapperfe/src/modules)
 
 ### Data Model (Concise)
 - `Trip`: `Id`, `Title`, `Description`, `DateFrom?`, `DateVisited?`, `RowVersion`, `Photos[]`, `Pins[]`, `TripAccesses[]`
 - `Pin`: `Id`, `Title`, `Description`, `Latitude`, `Longitude`, `DateVisited?`, `CreatedAt?`, `Category?`, `TripId?`, `Photos[]`, `UserId`
 - `Photo`: `Id`, `Url`, `FileName`, `PinId?`, `TripId?`
 - `TripAccess`: `TripId`, `UserId`, `AccessLevel` (`Owner`/`View`)
-- `User`, `Category`: standard entities used by relationships
+- `Category`: `Id`, `Name`, `ColorCode?`, `IsDefault?`, `UserId`, `RowVersion`
+- `User`: `Id`, `Username`, `PasswordHash`, `PasswordSalt`, `City?`, `Country?`, `KnownAs?`
 
 ## API Summary
+Auth
+- `POST /Auth/register`: create account, returns JWT
+- `POST /Auth/login`: authenticate, returns JWT
+
+Users
+- `GET /Users`: list users (authorized)
+- `GET /Users/{id}`: user by id (authorized)
+- `GET /Users/me`: current user profile (authorized)
+- `DELETE /Users/{id}`: delete user (admin only)
+
+Categories
+- `GET /Categories`: list categories (per user)
+- `GET /Categories/{id}`: category by id
+- `POST /Categories`: create category
+- `DELETE /Categories/{id}`: delete category
+
 Pins
 - `GET /Pins`: filter + paginate via `title`, `visitedFrom`, `createdFrom`, `category`, `page`, `pageSize`
 - `GET /Pins/count`: total matches for current filters
 - `GET /Pins/{id}`: details
-- `POST /Pins`: create (optional photo upload)
+- `POST /Pins`: create (multipart form, optional photo upload)
 - `DELETE /Pins/{id}`: delete
 
 Trips
@@ -48,9 +71,9 @@ Trips
 - `GET /Trips/count`: total matches for current filters
 - `GET /Trips/{id}`: details (pins + photos)
 - `GET /Trips/{id}/access`: current user’s access
-- `POST /Trips`: create (multiple photos, pin associations, sharing)
-- `PUT /Trips/{id}`: update (optimistic concurrency via `RowVersion`)
-- `DELETE /Trips/{id}`: delete (photo cleanup)
+- `POST /Trips`: create (multipart form, multiple photos, pin associations)
+- `PUT /Trips/{id}`: update (multipart form, optimistic concurrency via `RowVersion`)
+- `DELETE /Trips/{id}`: delete (photo cleanup; requires `rowVersion` query param)
 
 ### Pagination Model
 - Server defaults: `page=1`, `pageSize=50` if omitted.
@@ -118,7 +141,7 @@ npm start
 ```
 
 ## Configuration
-Edit [TripMapperBE/TripMapperBAL/appsettings.json](TripMapperBE/TripMapperBAL/appsettings.json) for DB, JWT, and Backblaze credentials. CORS allows `http://localhost:3000` by default (see [Program.cs](TripMapperBE/TripMapperBAL/Program.cs)).
+Edit [TripMapperBE/TripMapperBAL/appsettings.json](TripMapperBE/TripMapperBAL/appsettings.json) for DB, JWT, and Backblaze credentials. Create TripMapperDB database in SQL Server with the correct entities. CORS allows `http://localhost:3000` by default (see [Program.cs](TripMapperBE/TripMapperBAL/Program.cs)).
 
 ## Security
 - Controllers use `[Authorize]`; JWT settings are in `appsettings.json`.
@@ -127,8 +150,14 @@ Edit [TripMapperBE/TripMapperBAL/appsettings.json](TripMapperBE/TripMapperBAL/ap
 
 ## Key Paths
 - Backend solution: [TripMapperBE](TripMapperBE) · Frontend app: [tripmapperfe](tripmapperfe)
-- Services: [TripService](TripMapperBE/TripMapperBL/Services/TripService.cs), [PinService](TripMapperBE/TripMapperBL/Services/PinService.cs)
-- Lists: [TripList.js](tripmapperfe/src/components/trips/TripList.js), [PinList.js](tripmapperfe/src/components/pins/PinList.js)
+
+## Visuals
+![Alt Text](https://i.imgur.com/vy0NwXh.png)
+![Alt Text](https://i.imgur.com/YZKoIUS.png)
+![Alt Text](https://i.imgur.com/N86Kc73.png)
+![Alt Text](https://i.imgur.com/ho1ipld.png)
 
 ## License
 See [LICENSE.txt](LICENSE.txt).
+
+

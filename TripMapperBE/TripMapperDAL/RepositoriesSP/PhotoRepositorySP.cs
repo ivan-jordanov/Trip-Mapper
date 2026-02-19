@@ -122,5 +122,37 @@ namespace TripMapperDAL.RepositoriesSP
             var rowsAffected = await cmd.ExecuteNonQueryAsync();
             return rowsAffected > 0;
         }
+
+        public async Task<List<Photo>> GetPhotosByPinIdsAsync(List<int> pinIds)
+        {
+            string csv = string.Join(",", pinIds);
+
+            var pPinIdsCsv = new SqlParameter("@PinIdsCsv", csv);
+
+            return await _context.Photos
+                .FromSqlRaw("EXEC dbo.Photo_GetByPinIds @PinIdsCsv", pPinIdsCsv)
+                .ToListAsync();
+        }
+
+        public async Task<List<Photo>> GetPhotosByPinIdsOrTripIdAsync(List<int> pinIds, int tripId)
+        {
+            string csv = string.Join(",", pinIds);
+
+            var pPinIdsCsv = new SqlParameter("@PinIdsCsv", csv);
+            var pTripId = new SqlParameter("@TripId", tripId);
+
+            return await _context.Photos
+                .FromSqlRaw("EXEC dbo.Photo_GetByPinIdsOrTripId @PinIdsCsv, @TripId", pPinIdsCsv, pTripId)
+                .ToListAsync();
+        }
+
+        public async Task<List<Photo>> GetPhotosByTripIdAsync(int tripId)
+        {
+            var pTripId = new SqlParameter("@TripId", tripId);
+
+            return await _context.Photos
+                .FromSqlRaw("EXEC dbo.Photo_GetByTripId @TripId", pTripId)
+                .ToListAsync();
+        }
     }
 }

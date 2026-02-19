@@ -8,22 +8,6 @@ import useCategories from '../../hooks/useCategories';
 
 const pageSize = 20; // 5 per row * 4 rows
 
-// const generateDummyPins = (count = 40) => {
-//   const images = [
-//     'https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/images/bg-8.png',
-//     'https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/images/bg-9.png',
-//     'https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/images/bg-5.png',
-//     'https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/images/bg-3.png',
-//   ];
-//   return Array.from({ length: count }).map((_, i) => ({
-//     id: i + 1,
-//     title: `Pin ${i + 1}`,
-//     description: `Sample description for pin ${i + 1}`,
-//     photos: [{ id: i + 1, url: images[i % images.length], fileName: `photo${i + 1}.jpg` }],
-//     category: { id: (i % 4) + 1, name: ['Food','Landmarks','Nature','Other'][i % 4], color: ['blue','orange','green','gray'][i % 4] }
-//   }));
-// }
-
 const PinList = () => {
   const {
     pins,

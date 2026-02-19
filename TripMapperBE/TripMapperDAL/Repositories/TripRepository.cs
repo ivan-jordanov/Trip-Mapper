@@ -78,6 +78,8 @@ namespace TripMapperDAL.Repositories
             return await _context.Trips
                 .Include(t => t.Photos)
                 .Include(t => t.Pins)
+                .Include(t => t.TripAccesses)
+                    .ThenInclude(a => a.User)
                 .FirstOrDefaultAsync(t => t.Id == id);
         }
 

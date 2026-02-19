@@ -66,7 +66,15 @@ namespace TripMapper.Controllers
         public async Task<IActionResult> CreateTrip([FromForm] CreateTripDto dto, [FromForm] List<IFormFile>? photos)
         {
             var userId = User.GetUserId();
-            var trip = await _tripService.CreateTripAsync(dto, userId);
+            TripDto? trip;
+            try
+            {
+                trip = await _tripService.CreateTripAsync(dto, userId);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
 
             if (trip == null) return BadRequest("The trip title must be unique.");
 
@@ -115,7 +123,15 @@ namespace TripMapper.Controllers
                 return BadRequest($"You can only keep up to {MaxPhotosPerTrip} photos per trip.");
             }
 
-            var updated = await _tripService.UpdateTripAsync(dto, userId);
+            TripDto? updated;
+            try
+            {
+                updated = await _tripService.UpdateTripAsync(dto, userId);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
 
             if (updated == null) return NotFound();
 
@@ -142,10 +158,9 @@ namespace TripMapper.Controllers
             }
 
             // Handle pin relationships
-            if (dto.Pins != null && updated.Pins != null)
+            if (dto.Pins != null)
             {
-                List<string> NewPinTitles = updated.Pins.Select(pin => pin.Title).Where(title => dto.Pins.Contains(title)).ToList();
-                await _photoService.UpdateTripRecordForPinsAsync(id, NewPinTitles, userId);
+                await _photoService.UpdateTripRecordForPinsAsync(id, dto.Pins, userId);
             }
 
             // Fetch fresh trip data after all updates/uploads are complete
@@ -164,14 +179,22 @@ namespace TripMapper.Controllers
             if (trip == null) return NotFound();
 
             var photosToDelete = trip.Photos?.ToList() ?? new List<PhotoDto>();
+            var tripOnlyPhotos = photosToDelete.Where(p => p.PinId == null).ToList();
+            var pinLinkedPhotos = photosToDelete.Where(p => p.PinId != null).ToList();
 
-            // 2) Delete each photo from storage and database
-            foreach (var photo in photosToDelete)
+            // 2) Delete only trip-only photos from storage and database
+            foreach (var photo in tripOnlyPhotos)
             {
                 await _photoUploadService.DeleteAsync(photo.Id, photo.Url, userId);
             }
 
-            // 3) Delete trip after photos are deleted to avoid FK conflicts
+            // 3) Keep pin photos, just detach them from this trip
+            if (pinLinkedPhotos.Any())
+            {
+                await _photoService.DetachAllPhotosForTripAsync(id, userId);
+            }
+
+            // 4) Delete trip after photo cleanup to avoid FK conflicts
             var result = await _tripService.DeleteTripAsync(id, userId, rowVersion);
 
             if (!result) return NotFound();
