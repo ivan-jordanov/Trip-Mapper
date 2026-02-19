@@ -4,17 +4,137 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using TripMapperDAL.Interfaces;
 using TripMapperDB.Models;
 
-namespace TripMapperDAL.Repositories
+namespace TripMapperDAL.RepositoriesSP
 {
-    public class TripRepositorySp : GenericRepository<Trip>, ITripRepository
+    public class TripRepositorySP : GenericRepositorySP<Trip>, ITripRepositorySP
     {
-        public TripRepositorySp(TripMapperContext context) : base(context) { }
+        public TripRepositorySP(TripMapperContext context) : base(context, "Trip") { }
 
+        public override async Task<IEnumerable<Trip>> GetAllAsync()
+        {
+            return await _context.Trips
+                .FromSqlRaw("EXEC sp_Trip_GetAll")
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+        public override async Task<Trip?> GetByIdAsync(int id)
+        {
+            var pId = new SqlParameter("@Id", id);
+            
+            var trips = await _context.Trips
+                .FromSqlRaw("EXEC sp_Trip_GetById @Id", pId)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return trips.FirstOrDefault();
+        }
+
+        public override async Task<Trip> AddAsync(Trip entity)
+        {
+            var parameters = new[]
+            {
+                CreateParameter("@Title", entity.Title),
+                CreateParameter("@Description", entity.Description),
+                CreateParameter("@DateVisited", entity.DateVisited),
+                CreateParameter("@DateFrom", entity.DateFrom),
+                CreateOutputParameter("@NewId", SqlDbType.Int)
+            };
+
+            using var conn = _context.Database.GetDbConnection();
+            await conn.OpenAsync();
+            
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "sp_Trip_Add";
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddRange(parameters);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            
+            Trip? newTrip = null;
+            if (await reader.ReadAsync())
+            {
+                newTrip = new Trip
+                {
+                    Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                    Title = reader.GetString(reader.GetOrdinal("Title")),
+                    Description = reader["Description"] as string,
+                    DateVisited = reader["DateVisited"] as DateOnly?,
+                    DateFrom = reader["DateFrom"] as DateOnly?,
+                    RowVersion = (byte[])reader["RowVersion"]
+                };
+            }
+
+            return newTrip ?? throw new Exception("Failed to create trip");
+        }
+
+        public override async Task<Trip> UpdateAsync(Trip entity)
+        {
+            var parameters = new[]
+            {
+                CreateParameter("@Id", entity.Id),
+                CreateParameter("@Title", entity.Title),
+                CreateParameter("@Description", entity.Description),
+                CreateParameter("@DateVisited", entity.DateVisited),
+                CreateParameter("@DateFrom", entity.DateFrom),
+                CreateParameter("@RowVersion", entity.RowVersion)
+            };
+
+            using var conn = _context.Database.GetDbConnection();
+            await conn.OpenAsync();
+            
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "sp_Trip_Update";
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddRange(parameters);
+
+            try
+            {
+                using var reader = await cmd.ExecuteReaderAsync();
+                
+                Trip? updatedTrip = null;
+                if (await reader.ReadAsync())
+                {
+                    updatedTrip = new Trip
+                    {
+                        Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                        Title = reader.GetString(reader.GetOrdinal("Title")),
+                        Description = reader["Description"] as string,
+                        DateVisited = reader["DateVisited"] as DateOnly?,
+                        DateFrom = reader["DateFrom"] as DateOnly?,
+                        RowVersion = (byte[])reader["RowVersion"]
+                    };
+                }
+
+                return updatedTrip ?? throw new DbUpdateConcurrencyException("Trip was modified by another user");
+            }
+            catch (SqlException ex) when (ex.Number == 50001)
+            {
+                throw new DbUpdateConcurrencyException("Trip was modified by another user", ex);
+            }
+        }
+
+        public override async Task<bool> DeleteAsync(int id)
+        {
+            var pId = new SqlParameter("@Id", id);
+
+            using var conn = _context.Database.GetDbConnection();
+            await conn.OpenAsync();
+            
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "sp_Trip_Delete";
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.Add(pId);
+
+            var rowsAffected = await cmd.ExecuteNonQueryAsync();
+            return rowsAffected > 0;
+        }
+
+        // Custom methods (keep existing SP implementations)
         public async Task<Trip?> GetByTitleAsync(string title, int userId)
         {
             var pTitle = new SqlParameter("@Title", title);
@@ -45,9 +165,6 @@ namespace TripMapperDAL.Repositories
 
             using var reader = await cmd.ExecuteReaderAsync();
 
-            // SP bara poslozena logika, bidejki vrakjame 2 rezult sets (trip + negovi trip accesses)
-
-            // Result Set 1
             Trip? trip = null;
             if (await reader.ReadAsync())
             {
@@ -67,7 +184,6 @@ namespace TripMapperDAL.Repositories
 
             await reader.NextResultAsync();
 
-            // Result Set 2
             trip.TripAccesses = new List<TripAccess>();
 
             while (await reader.ReadAsync())
@@ -84,7 +200,7 @@ namespace TripMapperDAL.Repositories
         }
 
         public async Task<IEnumerable<Trip>> GetTripsForUserAsync(int userId, string? title, DateOnly? dateFrom, DateOnly? dateTo, int? page, int? pageSize)
-        {
+        {       
             title = string.IsNullOrWhiteSpace(title) ? null : title;
 
             var query = _context.TripAccesses

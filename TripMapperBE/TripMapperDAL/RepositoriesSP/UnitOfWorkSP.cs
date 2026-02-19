@@ -1,40 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using TripMapperDAL.Interfaces;
 using TripMapperDB.Models;
 
-namespace TripMapperDAL.Repositories
+namespace TripMapperDAL.RepositoriesSP
 {
-    public class UnitOfWorkSp : IUnitOfWork
+    public class UnitOfWorkSP : IUnitOfWorkSP
     {
         private readonly TripMapperContext _context;
 
-        public IPinRepository Pins { get; }
-        public ITripRepository Trips { get; }
-        public IPhotoRepository Photos { get; }
-        public IUserRepository Users { get; }
-        public ICategoryRepository Categories { get; }
-        public ITripAccessRepository TripAccess { get; }
+        public ITripRepositorySP Trips { get; }
+        public IPinRepositorySP Pins { get; }
+        public IPhotoRepositorySP Photos { get; }
+        public ICategoryRepositorySP Categories { get; }
+        public IUserRepositorySP Users { get; }
+        public ITripAccessRepositorySP TripAccess { get; }
 
-        public UnitOfWorkSp(
-            TripMapperContext context,
-            IPinRepository pinRepo,
-            ITripRepository tripRepo,
-            IPhotoRepository photoRepo,
-            IUserRepository userRepo,
-            ICategoryRepository catRepo,
-            ITripAccessRepository tripAccessRepo)
+        public UnitOfWorkSP(TripMapperContext context)
         {
             _context = context;
-            Pins = pinRepo;
-            Trips = tripRepo;
-            Photos = photoRepo;
-            Users = userRepo;
-            Categories = catRepo;
-            TripAccess = tripAccessRepo;
+            Trips = new TripRepositorySP(context);
+            Pins = new PinRepositorySP(context);
+            Photos = new PhotoRepositorySP(context);
+            Categories = new CategoryRepositorySP(context);
+            Users = new UserRepositorySP(context);
+            TripAccess = new TripAccessRepositorySP(context);
         }
 
         public async Task<bool> CompleteAsync()
@@ -42,11 +32,14 @@ namespace TripMapperDAL.Repositories
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public bool HasChanges() => _context.ChangeTracker.HasChanges();
-
         public void ClearTracking()
         {
             _context.ChangeTracker.Clear();
+        }
+
+        public void Dispose()
+        {
+            _context.Dispose();
         }
     }
 }

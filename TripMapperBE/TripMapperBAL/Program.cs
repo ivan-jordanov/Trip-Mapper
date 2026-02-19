@@ -10,6 +10,7 @@ using TripMapperDAL.Interfaces;
 using TripMapperDAL.Repositories;
 using TripMapperBL.Interfaces;
 using TripMapperBL.Services;
+using TripMapperDAL.RepositoriesSP;
 
 namespace TripMapper
 {
@@ -52,13 +53,16 @@ namespace TripMapper
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ITripAccessRepository, TripAccessRepository>();
 
+
+            // When switching over to stored procedures, comment out the above DAL repositories and uncomment the below ones
+            // Note: The BL services still depend on the old UnitOfWork interface, simply each of occurrance to UnitOfWorkSP when working with SP.
             // DAL Repositories with Stored Procedures
-            //builder.Services.AddScoped<IPinRepository, PinRepositorySp>();
-            //builder.Services.AddScoped<ITripRepository, TripRepositorySp>();
-            //builder.Services.AddScoped<IPhotoRepository, PhotoRepositorySp>();
-            //builder.Services.AddScoped<ICategoryRepository, CategoryRepositorySp>();
-            //builder.Services.AddScoped<IUserRepository, UserRepositorySp>();
-            //builder.Services.AddScoped<ITripAccessRepository, TripAccessRepositorySp>();
+            //builder.Services.AddScoped<IPinRepositorySP, PinRepositorySP>();
+            //builder.Services.AddScoped<ITripRepositorySP, TripRepositorySP>();
+            //builder.Services.AddScoped<IPhotoRepositorySP, PhotoRepositorySP>();
+            //builder.Services.AddScoped<ICategoryRepositorySP, CategoryRepositorySP>();
+            //builder.Services.AddScoped<IUserRepositorySP, UserRepositorySP>();
+            //builder.Services.AddScoped<ITripAccessRepositorySP, TripAccessRepositorySP>();
 
             // BL Services
             builder.Services.AddScoped<IPinService, PinService>();
@@ -72,7 +76,9 @@ namespace TripMapper
 
             // Unit of work
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-            //builder.Services.AddScoped<IUnitOfWork, UnitOfWorkSP>();
+
+            // STORED PROCEDURE Unit of work
+            //builder.Services.AddScoped<IUnitOfWorkSP, UnitOfWorkSP>();
 
             // Controllers and services
             builder.Services.AddControllers();
