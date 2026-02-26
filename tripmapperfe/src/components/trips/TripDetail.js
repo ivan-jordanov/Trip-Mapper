@@ -18,6 +18,7 @@ import {
 import {
   IconCalendar,
   IconMapPin,
+  IconMap,
   IconPhoto,
   IconAlertCircle,
   IconEdit,
@@ -25,6 +26,7 @@ import {
 } from '@tabler/icons-react';
 import useTrips from '../../hooks/useTrips';
 import showError from '../../modules/showError';
+import TripVisualization from './TripVisualization';
 
 const TripDetail = () => {
   const { id } = useParams();
@@ -40,6 +42,7 @@ const TripDetail = () => {
   } = useTrips();
 
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
+  const [visualizeModalOpened, setVisualizeModalOpened] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const altImageTrip = 'https://images.pexels.com/photos/8058392/pexels-photo-8058392.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
   const altImagePin = 'https://images.pexels.com/photos/68704/pexels-photo-68704.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
@@ -113,6 +116,14 @@ const TripDetail = () => {
             <Title order={2}>{trip.title}</Title>
             {isOwner && (
               <Group gap="sm">
+                <Button
+                  variant="light"
+                  color="teal"
+                  leftSection={<IconMap size={16} />}
+                  onClick={() => setVisualizeModalOpened(true)}
+                >
+                  Visualize
+                </Button>
                 <Button
                   variant="light"
                   color="blue"
@@ -285,6 +296,16 @@ const TripDetail = () => {
             </Button>
           </Group>
         </Stack>
+      </Modal>
+
+      <Modal
+        opened={visualizeModalOpened}
+        onClose={() => setVisualizeModalOpened(false)}
+        title="Trip Pins Visualization"
+        size="xl"
+        centered
+      >
+        <TripVisualization pins={trip.pins || []} />
       </Modal>
     </Container>
   );

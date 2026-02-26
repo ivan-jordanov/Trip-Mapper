@@ -14,6 +14,7 @@ import PinsPage from './pages/PinsPage';
 import CategoriesPage from './pages/CategoriesPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import AccountDetails from './components/auth/AccountDetails';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import PinDetail from './components/pins/PinDetail';
@@ -44,6 +45,7 @@ function App() {
               <Route path="/categories" element={<ProtectedRoute><CategoriesPage /></ProtectedRoute>} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/account" element={<ProtectedRoute><AccountDetails /></ProtectedRoute>} />
             </Routes>
           </AppShell.Main>
 

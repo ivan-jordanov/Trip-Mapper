@@ -29,6 +29,19 @@ const useAuth = () => {
     fetchUser();
   }, []);
 
+  const refreshUser = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await fetchUser();
+    } catch (err) {
+      setError(err.response?.data?.message || err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const login = async (username, password) => {
     setLoading(true);
     setError(null);
@@ -74,6 +87,7 @@ const useAuth = () => {
     login,
     register,
     logout,
+    refreshUser,
     isAuthenticated: !!user,
   };
 };

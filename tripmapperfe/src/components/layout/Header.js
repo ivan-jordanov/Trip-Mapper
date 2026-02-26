@@ -1,6 +1,6 @@
 import React from "react";
 import { Group, Anchor, Text, Box, Button } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
+import { useMediaQuery, useHover } from "@mantine/hooks";
 import { Link, useNavigate } from "react-router-dom";
 import {
   IconHome,
@@ -17,6 +17,7 @@ const Header = () => {
   const small = useMediaQuery("(max-width: 768px)");
   const { user, isAuthenticated, logout } = useAuthContext();
   const navigate = useNavigate();
+  const { hovered, ref } = useHover();
 
   const handleLogout = async () => {
     await logout();
@@ -98,7 +99,12 @@ const Header = () => {
           {!small && (
             isAuthenticated ? (
               <>
-                <Text c="dimmed">Welcome, <strong c="dark.2">{user.knownAs}</strong></Text>
+                <Text c="dimmed">Welcome, <Anchor ref={ref}
+                  component={Link}
+                  to="/account"
+                  c={hovered ? 'blue' : 'dark.2'} 
+                   {...(hovered ? { style: { cursor: "pointer", textDecoration: 'underline', fontWeight: "bold" } } : { style: { fontWeight: "bold" } })}
+                  >{user.knownAs}</Anchor></Text>
                 <Button color="red" variant="outline" onClick={handleLogout}>
                   Log out
                 </Button>

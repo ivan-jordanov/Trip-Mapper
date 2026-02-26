@@ -27,7 +27,6 @@ const HomePage = () => {
 				<MapView
 					initialCenter={[51.5074, -0.1278]}
 					initialZoom={10}
-					pins={pins}
 					onMapClick={handleMapClick}
 					previewMarker={previewCoords}
 				/>

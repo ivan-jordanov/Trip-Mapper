@@ -19,15 +19,18 @@ import {
 } from '@mantine/core';
 import {
   IconMapPin,
+  IconMap,
   IconCalendar,
   IconUser,
   IconAlertCircle,
 } from '@tabler/icons-react';
+import PinVisualization from './PinVisualization';
 
 const PinDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
+  const [visualizeModalOpened, setVisualizeModalOpened] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const {categories, fetchCategories} = useCategories();
 
@@ -201,10 +204,28 @@ const PinDetail = () => {
           </Stack>
 
           <Group justify="flex-end">
+            <Button
+              variant="light"
+              color="teal"
+              leftSection={<IconMap size={16} />}
+              onClick={() => setVisualizeModalOpened(true)}
+            >
+              Visualize
+            </Button>
             <Button color="red" variant="light" onClick={() => setDeleteModalOpened(true)}>Delete</Button>
           </Group>
         </Stack>
       </Card>
+
+      <Modal
+        opened={visualizeModalOpened}
+        onClose={() => setVisualizeModalOpened(false)}
+        title="Pin Location"
+        size="xl"
+        centered
+      >
+        <PinVisualization pin={pin} />
+      </Modal>
     </Container>
   );
 };
