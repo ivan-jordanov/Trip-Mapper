@@ -54,9 +54,17 @@ namespace TripMapper.Controllers
         public async Task<IActionResult> DeleteCategory(int id)
         {
             var userId = User.GetUserId();
-            var success = await _categoryService.DeleteCategoryAsync(id, userId);
-            if (!success) return BadRequest("Failed to delete category");
-            return NoContent();
+
+            try
+            {
+                var success = await _categoryService.DeleteCategoryAsync(id, userId);
+                if (!success) return BadRequest("Failed to delete category");
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

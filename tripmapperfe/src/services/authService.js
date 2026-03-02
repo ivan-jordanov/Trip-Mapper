@@ -25,6 +25,11 @@ const authService = {
     const response = await axios.get('/Users/me');
     return response.data;
   },
+
+  updateCurrentUser: async (userData) => {
+    const response = await axios.put('/Users/me', userData);
+    return response.data;
+  },
 };
 
 export default authService;

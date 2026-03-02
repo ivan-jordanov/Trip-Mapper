@@ -27,7 +27,11 @@ namespace TripMapperBL.Helpers
                     .Where(a => a.AccessLevel == "View")
                     .Select(a => a.User.Username)))
                 .ForMember(d => d.Pins, opt => opt.MapFrom(s => s.Pins))
-                .ForMember(d => d.Photos, opt => opt.MapFrom(s => s.Photos));
+                .ForMember(d => d.Photos, opt => opt.MapFrom(s => s.Photos))
+                .ForMember(d => d.PreviewPhotoUrl, opt => opt.MapFrom(s =>
+                    s.Photos.Where(photo => photo.PinId == null).Select(photo => photo.Url).FirstOrDefault()
+                    ?? s.Photos.Select(photo => photo.Url).FirstOrDefault()
+                    ?? ""));
 
             CreateMap<Pin, PinDto>()
                 .ForMember(d => d.Trip, opt => opt.Ignore()) // pinDto has a reference to trip, so ignore it to avoid circular loop

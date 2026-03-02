@@ -8,7 +8,10 @@ const placeholder = 'https://images.pexels.com/photos/8058392/pexels-photo-80583
 const TripCard = ({ trip }) => {
   const navigate = useNavigate();
   // Could be optimized by storing thumbnail URL in trip data, but this is simpler for now and doesn't require backend changes
-  const thumb = trip?.photos && trip.photos.length > 0 ? trip.photos.find(el => !el.pinId)?.url || trip.photos[0].url : placeholder;
+  //const thumb = trip?.photos && trip.photos.length > 0 ? trip.photos.find(el => !el.pinId)?.url || trip.photos[0].url : placeholder;
+  
+  const thumb = trip?.previewPhotoUrl || placeholder;
+  console.log('Trip:', trip);
   const pinCount = trip?.pins?.length || 0;
 
   return (

@@ -5,6 +5,7 @@ import { useMediaQuery } from '@mantine/hooks';
 import CategoryList from '../components/categories/CategoryList';
 import CategoryForm from '../components/categories/CategoryForm';
 import useCategories from '../hooks/useCategories';
+import showError from '../modules/showError';
 
 const CategoriesPage = () => {
   const small = useMediaQuery("(max-width: 768px)");
@@ -27,16 +28,26 @@ const CategoriesPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    await createCategory({name, colorCode: color});
-
-    setName('');
-    setColor('#228be6');
+    try {
+      await createCategory({name, colorCode: color});
+      setName('');
+      setColor('#228be6');
+    } catch (err) {
+      showError(err.response?.data?.message || err.message);
+    }
   };
 
   const handleDelete = async (id) => {
-    await deleteCategory(id);
-    await fetchCategories();
-  };
+    try {
+      const deleted = await deleteCategory(id);
+      if (deleted) {
+        await fetchCategories();
+      }
+    } catch (err) {
+      showError(err.response?.data?.message || err.message);
+    }
+    }
+  ;
 
   return (
     <Container size="lg" py="md">

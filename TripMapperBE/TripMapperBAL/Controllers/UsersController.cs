@@ -1,4 +1,4 @@
-﻿    using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TripMapper.Controllers;
 using TripMapperAPI.Extensions;
@@ -36,6 +36,14 @@ namespace TripMapper.Controllers
             var userId = User.GetUserId();
             var me = await _userService.GetUserByIdAsync(userId);
             return me == null ? NotFound() : Ok(me);
+        }
+
+        [HttpPut("me")]
+        public async Task<IActionResult> UpdateMe(UpdateAccountDto dto)
+        {
+            var userId = User.GetUserId();
+            var updated = await _userService.UpdateAccountAsync(userId, dto);
+            return updated == null ? NotFound() : Ok(updated);
         }
 
         // Only for admins(if i ever implement roles)

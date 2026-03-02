@@ -80,6 +80,22 @@ const useAuth = () => {
     setUser(null);
   };
 
+  const updateAccount = async (accountData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const updatedUser = await authService.updateCurrentUser(accountData);
+      setUser(updatedUser);
+      showStatus('Account updated successfully');
+      return updatedUser;
+    } catch (err) {
+      setError(err.response?.data?.message || err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     user,
     loading,
@@ -88,6 +104,7 @@ const useAuth = () => {
     register,
     logout,
     refreshUser,
+    updateAccount,
     isAuthenticated: !!user,
   };
 };

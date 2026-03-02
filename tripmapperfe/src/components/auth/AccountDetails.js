@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Container,
   Paper,
@@ -27,16 +27,70 @@ import { useNavigate } from 'react-router-dom';
 const AccountDetails = () => {
   const small = useMediaQuery('(max-width: 768px)');
   const navigate = useNavigate();
-  const { user, loading, logout, refreshUser } = useAuthContext();
+  const { user, loading, logout, refreshUser, updateAccount } = useAuthContext();
+  const [isEditing, setIsEditing] = useState(false);
+  const [formValues, setFormValues] = useState({
+    knownAs: '',
+    gender: '',
+    city: '',
+    country: '',
+  });
+  const [draftValues, setDraftValues] = useState({
+    knownAs: '',
+    gender: '',
+    city: '',
+    country: '',
+  });
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
 
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    setFormValues({
+      knownAs: user.knownAs || '',
+      gender: user.gender || '',
+      city: user.city || '',
+      country: user.country || '',
+    });
+  }, [user]);
+
+  const handleChange = (field) => (event) => {
+    const { value } = event.currentTarget;
+    setDraftValues((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleEdit = () => {
+    setDraftValues(formValues);
+    setIsEditing(true);
+  };
+
+  const handleSave = async () => {
+    await updateAccount({
+      knownAs: draftValues.knownAs,
+      gender: draftValues.gender,
+      city: draftValues.city,
+      country: draftValues.country,
+    });
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setDraftValues(formValues);
+    setIsEditing(false);
+  };
+
   const initials = user?.knownAs?.[0] || user?.username?.[0] || 'U';
 
-  if (loading || !user) {
+  if ((loading && !user) || !user) {
     return (
       <Container size="sm" py="xl">
         <Group justify="center">
@@ -64,6 +118,14 @@ const AccountDetails = () => {
             </Group>
 
             <Group grow={small} w={small ? '100%' : 'auto'}>
+              <Button onClick={isEditing ? handleSave : handleEdit} loading={loading}>
+                {isEditing ? 'Save' : 'Edit'}
+              </Button>
+              {isEditing && (
+                <Button variant="default" onClick={handleCancel} disabled={loading}>
+                  Cancel
+                </Button>
+              )}
               <Button
                 variant="light"
                 leftSection={<IconRefresh size={16} />}
@@ -92,9 +154,11 @@ const AccountDetails = () => {
             />
 
             <TextInput
-              readOnly
               label="Nickname"
-              value={user?.knownAs || ''}
+              readOnly={!isEditing}
+              value={isEditing ? draftValues.knownAs : formValues.knownAs}
+              maxLength={100}
+              onChange={handleChange('knownAs')}
               leftSection={<IconUser size={16} />}
             />
 
@@ -106,23 +170,29 @@ const AccountDetails = () => {
             />
 
             <TextInput
-              readOnly
               label="Gender"
-              value={user?.gender || ''}
+              readOnly={!isEditing}
+              value={isEditing ? draftValues.gender : formValues.gender}
+              maxLength={20}
+              onChange={handleChange('gender')}
               leftSection={<IconUser size={16} />}
             />
 
             <TextInput
-              readOnly
               label="City"
-              value={user?.city || ''}
+              readOnly={!isEditing}
+              value={isEditing ? draftValues.city : formValues.city}
+              maxLength={100}
+              onChange={handleChange('city')}
               leftSection={<IconMapPin size={16} />}
             />
 
             <TextInput
-              readOnly
               label="Country"
-              value={user?.country || ''}
+              readOnly={!isEditing}
+              value={isEditing ? draftValues.country : formValues.country}
+              maxLength={100}
+              onChange={handleChange('country')}
               leftSection={<IconMapPin size={16} />}
             />
           </SimpleGrid>

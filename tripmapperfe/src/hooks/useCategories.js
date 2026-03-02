@@ -35,7 +35,6 @@ const useCategories = () => {
       return data;
     } catch (err) {
       setError(err.response?.data?.message || err.message);
-      throw err;
     } finally {
       setLoading(false);
     }
@@ -64,9 +63,10 @@ const useCategories = () => {
       await categoryService.delete(id);
       setCategories((prev) => prev.filter((cat) => cat.id !== id));
       showStatus('Category deleted successfully');
+      return true;
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
-      throw err;
+      setError(err.response?.data      ?.message || err.message);
+      return false;
     } finally {
       setLoading(false);
     }

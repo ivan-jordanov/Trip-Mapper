@@ -55,6 +55,14 @@ namespace TripMapperBL.Services
             var category = await _uow.Categories.GetByIdAsync(id);
             if (category == null || category.UserId != currentUserId) return false;
 
+            var hasAssignedPins = await _uow.Pins.Query()
+                .AnyAsync(pin => pin.CategoryId == id && pin.UserId == currentUserId);
+
+            if (hasAssignedPins)
+            {
+                throw new InvalidOperationException("Cannot delete category because it has assigned pins.");
+            }
+
             _uow.Categories.Delete(category.Id);
 
             return await _uow.CompleteAsync();

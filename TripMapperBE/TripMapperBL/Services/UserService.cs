@@ -83,6 +83,22 @@ namespace TripMapperBL.Services
             var user = await _uow.Users.GetByIdAsync(id);
             return user == null ? null : _mapper.Map<UserDto>(user);
         }
+
+        public async Task<UserDto?> UpdateAccountAsync(int id, UpdateAccountDto dto)
+        {
+            var user = await _uow.Users.GetByIdAsync(id);
+            if (user == null) return null;
+
+            user.KnownAs = dto.KnownAs?.Trim();
+            user.Gender = dto.Gender?.Trim();
+            user.City = dto.City?.Trim();
+            user.Country = dto.Country?.Trim();
+
+            _uow.Users.Update(user);
+            await _uow.CompleteAsync();
+
+            return _mapper.Map<UserDto>(user);
+        }
     }
 
 }
