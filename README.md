@@ -13,7 +13,7 @@ Trip‑Mapper lets you plan and document trips with pins, photos, and secure sha
 - Backend: ASP.NET Core Web API; Entity Framework Core (SQL Server provider); AutoMapper for DTO mapping
 - Data Access: Repository + Unit of Work patterns; optional Stored Procedure repository implementations
 - Auth & Security: JWT (Issuer/Audience/Key), `[Authorize]` on controllers; per‑trip `TripAccess` checks; optimistic concurrency
-- Frontend: React, Mantine UI components, Axios for API calls, Tabler Icons
+- Frontend: React, Mantine UI components, Axios for API calls, JEST unit tests, Tabler Icons
 - Storage: Backblaze B2 for photos; configurable via `appsettings.json`
 
 ## Architecture at a Glance
@@ -139,6 +139,25 @@ cd tripmapperfe
 npm install
 npm start
 ```
+
+## Frontend Testing
+From `tripmapperfe`:
+
+```bash
+npm test
+```
+
+Run the focused high-value suites:
+
+```bash
+npm test -- --watchAll=false --runTestsByPath src/hooks/useAuth.test.js src/hooks/useCategories.test.js src/hooks/useTrips.test.js src/hooks/usePins.test.js src/pages/CategoriesPage.test.js src/components/auth/ProtectedRoute.test.js src/api/axios.test.js
+```
+
+Coverage currently includes:
+- Custom hook behavior (`useAuth`, `useCategories`, `useTrips`, `usePins`)
+- Categories page submit/delete/error flows
+- `ProtectedRoute` auth redirect/render logic
+- Axios interceptor behavior (token injection, `FormData` header handling, `401` redirect)
 
 ## Configuration
 Edit [TripMapperBE/TripMapperBAL/appsettings.json](TripMapperBE/TripMapperBAL/appsettings.json) for DB, JWT, and Backblaze credentials. Create TripMapperDB database in SQL Server with the correct entities. CORS allows `http://localhost:3000` by default (see [Program.cs](TripMapperBE/TripMapperBAL/Program.cs)).
