@@ -8,6 +8,20 @@ const useAuth = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const getErrorMessage = (err) => {
+    const responseData = err?.response?.data;
+
+    if (typeof responseData === 'string' && responseData.trim().length > 0) {
+      return responseData;
+    }
+
+    if (typeof responseData?.message === 'string' && responseData.message.trim().length > 0) {
+      return responseData.message;
+    }
+
+    return err.message;
+  };
+
   if (error) {
       showError(error);
   }
@@ -18,7 +32,7 @@ const useAuth = () => {
         const userData = await authService.getCurrentUser();
         setUser(userData);
       } catch (err) {
-        setError(err.message);
+        setError(getErrorMessage(err));
         localStorage.removeItem('token');
       }
     }
@@ -35,7 +49,7 @@ const useAuth = () => {
     try {
       await fetchUser();
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setError(getErrorMessage(err));
       throw err;
     } finally {
       setLoading(false);
@@ -51,7 +65,7 @@ const useAuth = () => {
       showStatus('Login successful');
       return userData;
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setError(getErrorMessage(err));
       throw err;
     } finally {
       setLoading(false);
@@ -67,7 +81,7 @@ const useAuth = () => {
       showStatus('Registration successful');
       return response;
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setError(getErrorMessage(err));
       throw err;
     } finally {
       setLoading(false);
@@ -89,7 +103,22 @@ const useAuth = () => {
       showStatus('Account updated successfully');
       return updatedUser;
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setError(getErrorMessage(err));
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const changePassword = async (passwordData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await authService.changePassword(passwordData);
+      showStatus('Password changed successfully');
+      return response;
+    } catch (err) {
+      setError(getErrorMessage(err));
       throw err;
     } finally {
       setLoading(false);
@@ -105,6 +134,7 @@ const useAuth = () => {
     logout,
     refreshUser,
     updateAccount,
+    changePassword,
     isAuthenticated: !!user,
   };
 };

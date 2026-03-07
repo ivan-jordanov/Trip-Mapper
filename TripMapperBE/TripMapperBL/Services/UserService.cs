@@ -60,6 +60,28 @@ namespace TripMapperBL.Services
             return user;
         }
 
+        public async Task<bool> UpdateUserPasswordAsync(int userId, string currentPassword, string newPassword)
+        {
+            var user = await _uow.Users.GetByIdAsync(userId);
+            if (user == null) return false;
+
+            using var hmac = new HMACSHA512(user.PasswordSalt);
+            var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(currentPassword));
+
+            if (!computedHash.SequenceEqual(user.PasswordHash))
+                return false;
+
+            using var newHmac = new HMACSHA512();
+
+            user.PasswordHash = newHmac.ComputeHash(Encoding.UTF8.GetBytes(newPassword));
+            user.PasswordSalt = newHmac.Key;
+
+            _uow.Users.Update(user);
+            await _uow.CompleteAsync();
+
+            return true;
+        }
+
         public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
         {
             var users = await _uow.Users.GetAllAsync();

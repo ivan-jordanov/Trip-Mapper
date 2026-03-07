@@ -96,12 +96,32 @@ describe('axios instance interceptors', () => {
 
   it('clears token and redirects to login on 401 responses', async () => {
     localStorage.setItem('token', 'abc123');
-    const error = { response: { status: 401 } };
+    const error = { response: { status: 401 }, config: { url: '/Users/me' } };
 
     await expect(responseErrorHandler(error)).rejects.toBe(error);
 
     expect(localStorage.getItem('token')).toBeNull();
     expect(window.location.href).toBe('/login');
+  });
+
+  it('does not redirect on 401 from login endpoint', async () => {
+    localStorage.setItem('token', 'abc123');
+    const error = { response: { status: 401 }, config: { url: '/Auth/login' } };
+
+    await expect(responseErrorHandler(error)).rejects.toBe(error);
+
+    expect(localStorage.getItem('token')).toBe('abc123');
+    expect(window.location.href).toBe('http://localhost/');
+  });
+
+  it('does not redirect on 401 from register endpoint', async () => {
+    localStorage.setItem('token', 'abc123');
+    const error = { response: { status: 401 }, config: { url: '/Auth/register' } };
+
+    await expect(responseErrorHandler(error)).rejects.toBe(error);
+
+    expect(localStorage.getItem('token')).toBe('abc123');
+    expect(window.location.href).toBe('http://localhost/');
   });
 
   it('keeps token and does not redirect for non-401 responses', async () => {

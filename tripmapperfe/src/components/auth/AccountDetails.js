@@ -9,14 +9,12 @@ import {
   TextInput,
   Button,
   Loader,
-  Center,
   Avatar,
   SimpleGrid,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import {
   IconUser,
-  IconAt,
   IconMapPin,
   IconRefresh,
   IconLogout,
@@ -27,7 +25,7 @@ import { useNavigate } from 'react-router-dom';
 const AccountDetails = () => {
   const small = useMediaQuery('(max-width: 768px)');
   const navigate = useNavigate();
-  const { user, loading, logout, refreshUser, updateAccount } = useAuthContext();
+  const { user, loading, logout, refreshUser, updateAccount, changePassword } = useAuthContext();
   const [isEditing, setIsEditing] = useState(false);
   const [formValues, setFormValues] = useState({
     knownAs: '',
@@ -35,6 +33,12 @@ const AccountDetails = () => {
     city: '',
     country: '',
   });
+  const [passwordValues, setPasswordValues] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmNewPassword: '',
+  });
+  const [showPasswordErrors, setShowPasswordErrors] = useState(false);
   const [draftValues, setDraftValues] = useState({
     knownAs: '',
     gender: '',
@@ -88,9 +92,68 @@ const AccountDetails = () => {
     setIsEditing(false);
   };
 
+  const handlePasswordChange = (field) => (event) => {
+    const { value } = event.currentTarget;
+    setPasswordValues((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const validateNewPassword = (value) => {
+    if (value.length === 0) {
+      return 'Password is required';
+    }
+    if (value.length < 8) {
+      return 'Password must be at least 8 characters long';
+    }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[\d\W]).*$/;
+
+    if (!passwordRegex.test(value)) {
+      return 'Password must contain at least one uppercase letter, one lowercase letter, and one number or symbol';
+    }
+
+    return null;
+  };
+
+  const newPasswordError = validateNewPassword(passwordValues.newPassword);
+  const confirmNewPasswordError =
+    passwordValues.confirmNewPassword.length === 0
+      ? 'Please confirm your new password'
+      : passwordValues.confirmNewPassword !== passwordValues.newPassword
+        ? 'New passwords do not match'
+        : null;
+  const canSubmitPasswordChange =
+    !!passwordValues.currentPassword && !newPasswordError && !confirmNewPasswordError;
+
+  const handleChangePassword = async () => {
+    setShowPasswordErrors(true);
+
+    if (!canSubmitPasswordChange) {
+      return;
+    }
+
+    try {
+      await changePassword({
+        CurrentPassword: passwordValues.currentPassword,
+        NewPassword: passwordValues.newPassword,
+      });
+    } catch {
+      return;
+    }
+
+    setPasswordValues({
+      currentPassword: '',
+      newPassword: '',
+      confirmNewPassword: '',
+    });
+    setShowPasswordErrors(false);
+  };
+
   const initials = user?.knownAs?.[0] || user?.username?.[0] || 'U';
 
-  if ((loading && !user) || !user) {
+  if (loading || !user) {
     return (
       <Container size="sm" py="xl">
         <Group justify="center">
@@ -163,13 +226,6 @@ const AccountDetails = () => {
             />
 
             <TextInput
-              readOnly
-              label="Email"
-              value={user?.email || ''}
-              leftSection={<IconAt size={16} />}
-            />
-
-            <TextInput
               label="Gender"
               readOnly={!isEditing}
               value={isEditing ? draftValues.gender : formValues.gender}
@@ -196,6 +252,40 @@ const AccountDetails = () => {
               leftSection={<IconMapPin size={16} />}
             />
           </SimpleGrid>
+
+          <Stack gap="sm">
+            <Title order={4}>Change Password</Title>
+            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+              <TextInput
+                label="Current Password"
+                type="password"
+                value={passwordValues.currentPassword}
+                onChange={handlePasswordChange('currentPassword')}
+              />
+              <TextInput
+                label="New Password"
+                type="password"
+                value={passwordValues.newPassword}
+                onChange={handlePasswordChange('newPassword')}
+                error={showPasswordErrors ? newPasswordError : null}
+              />
+              <TextInput
+                label="Confirm New Password"
+                type="password"
+                value={passwordValues.confirmNewPassword}
+                onChange={handlePasswordChange('confirmNewPassword')}
+                error={showPasswordErrors ? confirmNewPasswordError : null}
+              />
+            </SimpleGrid>
+            <Group justify="flex-end">
+              <Button
+                onClick={handleChangePassword}
+                loading={loading}
+              >
+                Change Password
+              </Button>
+            </Group>
+          </Stack>
         </Stack>
       </Paper>
     </Container>

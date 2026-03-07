@@ -11,6 +11,7 @@ jest.mock('../services/authService', () => ({
     logout: jest.fn(),
     getCurrentUser: jest.fn(),
     updateCurrentUser: jest.fn(),
+    changePassword: jest.fn(),
   },
 }));
 jest.mock('../modules/showError', () => jest.fn());
@@ -111,5 +112,30 @@ describe('useAuth', () => {
     expect(authService.updateCurrentUser).toHaveBeenCalledWith({ username: 'ivanj-updated' });
     expect(result.current.user).toEqual(updatedUser);
     expect(showStatus).toHaveBeenCalledWith('Account updated successfully');
+  });
+
+  it('changes password successfully', async () => {
+    authService.changePassword.mockResolvedValue({ message: 'Password changed successfully.' });
+
+    const { result } = renderHook(() => useAuth());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    let response;
+    await act(async () => {
+      response = await result.current.changePassword({
+        CurrentPassword: 'old-password',
+        NewPassword: 'new-password',
+      });
+    });
+
+    expect(response).toEqual({ message: 'Password changed successfully.' });
+    expect(authService.changePassword).toHaveBeenCalledWith({
+      CurrentPassword: 'old-password',
+      NewPassword: 'new-password',
+    });
+    expect(showStatus).toHaveBeenCalledWith('Password changed successfully');
   });
 });

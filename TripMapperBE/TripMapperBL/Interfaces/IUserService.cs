@@ -17,5 +17,6 @@ namespace TripMapperBL.Interfaces
         Task<bool> DeleteUserAsync(int id);
         Task<UserDto?> MapToUserDtoAsync(int id);
         Task<UserDto?> UpdateAccountAsync(int id, UpdateAccountDto dto);
+        Task<bool> UpdateUserPasswordAsync(int userId, string currentPassword, string newPassword);
     }
 }

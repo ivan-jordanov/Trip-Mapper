@@ -30,6 +30,11 @@ const authService = {
     const response = await axios.put('/Users/me', userData);
     return response.data;
   },
+
+  changePassword: async (passwordData) => {
+    const response = await axios.post('/Users/me/password', passwordData);
+    return response.data;
+  },
 };
 
 export default authService;

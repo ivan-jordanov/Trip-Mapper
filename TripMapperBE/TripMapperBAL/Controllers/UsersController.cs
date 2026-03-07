@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TripMapper.Controllers;
+using TripMapper.Services;
 using TripMapperAPI.Extensions;
 using TripMapperBL.DTOs;
 using TripMapperBL.Interfaces;
@@ -46,7 +47,18 @@ namespace TripMapper.Controllers
             return updated == null ? NotFound() : Ok(updated);
         }
 
-        // Only for admins(if i ever implement roles)
+        [HttpPost("me/password")]
+        public async Task<IActionResult> ChangePassword(UpdatePasswordDto dto)
+        {
+            var userId = User.GetUserId();
+            var success = await _userService.UpdateUserPasswordAsync(userId, dto.CurrentPassword, dto.NewPassword);
+            
+            if (!success)
+                return BadRequest("Current password is incorrect.");
+
+            return Ok(new { message = "Password changed successfully." });
+        }
+
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)

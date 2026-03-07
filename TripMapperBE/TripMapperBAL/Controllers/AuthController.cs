@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using TripMapper.Controllers;
 using TripMapper.Services;
+using TripMapperAPI.Extensions;
 using TripMapperBL.DTOs;
 using TripMapperBL.Interfaces;
 using TripMapperDAL.Interfaces;
@@ -31,6 +32,8 @@ namespace TripMapper.Controllers
             var token = _tokenService.CreateToken(user);
             return Ok(new { token });
         }
+
+        
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto dto)

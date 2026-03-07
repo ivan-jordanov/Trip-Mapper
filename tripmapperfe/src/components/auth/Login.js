@@ -1,10 +1,11 @@
-import { React } from 'react';
+import { React, useRef } from 'react';
 import { Button, Flex, Group, TextInput, Box, Stack } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useAuthContext } from '../../context/AuthContext';
 
 const Login = () => {
     const { loading, isAuthenticated, login } = useAuthContext();
+    const formRef = useRef(null);
 
     const form = useForm({
         mode: 'uncontrolled',
@@ -45,15 +46,27 @@ const Login = () => {
     });
 
     async function handleSubmit(values) {
-        await login(values.username, values.password);
+        const submittedUsername = values.username;
+        const submittedPassword = values.password;
+
+
+        try {
+            await login(submittedUsername, submittedPassword);
+        } catch {
+            console.log("why");
+            form.reset();
+            return;
+        }
     }
+
+    const submitLogin = form.onSubmit((values) => handleSubmit(values));
 
     return (
         // Outer Flex remains to center the form block vertically/horizontally on the page (if desired)
         <Flex justify="center" align="flex-start" direction="column">
             {/* Box controls the maximum width of the form (e.g., 300px) and centers it horizontally */}
             <Box w={300} mx="auto">
-                <form onSubmit={form.onSubmit((values) => handleSubmit(values))}>
+                <form ref={formRef} noValidate onSubmit={submitLogin}>
                     {/* Stack ensures consistent vertical spacing between form elements */}
                     <Stack>
                         <TextInput
@@ -61,6 +74,7 @@ const Login = () => {
                             label="Username"
                             placeholder="Your username"
                             key={form.key('username')}
+                            autoComplete="username"
                             {...form.getInputProps('username')}
                         />
 
@@ -70,6 +84,7 @@ const Login = () => {
                             placeholder="Your password"
                             key={form.key('password')}
                             type='password'
+                            autoComplete="current-password"
                             {...form.getInputProps('password')}
                         />
                     </Stack>
