@@ -93,7 +93,7 @@ const TripForm = () => {
           ? (tripDetails.sharedUsernames || tripDetails.sharedWith).join(', ')
           : '',
       });
-      setExistingPhotos(tripDetails.photos || []);
+      setExistingPhotos((tripDetails.photos || []).filter(p => !p.pinId));
       setPhotosToDelete([]);
       setNewPhotos([]);
     }
