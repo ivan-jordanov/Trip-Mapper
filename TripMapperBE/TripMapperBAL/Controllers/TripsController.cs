@@ -62,6 +62,73 @@ namespace TripMapper.Controllers
             return Ok(access);
         }
 
+        [HttpGet("{id}/collaborators")]
+        public async Task<IActionResult> GetCollaborators(int id)
+        {
+            try
+            {
+                return Ok(await _tripService.GetCollaboratorsAsync(id, User.GetUserId()));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("{id}/access")]
+        public async Task<IActionResult> GrantAccess(int id, [FromBody] GrantTripAccessDto dto)
+        {
+            try
+            {
+                var access = await _tripService.GrantAccessAsync(id, User.GetUserId(), dto.Username, dto.AccessLevel);
+                return Ok(access);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("{id}/access/{userId}")]
+        public async Task<IActionResult> RevokeAccess(int id, int userId)
+        {
+            try
+            {
+                var revoked = await _tripService.RevokeAccessAsync(id, User.GetUserId(), userId);
+                return revoked ? NoContent() : NotFound();
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("{id}/leave")]
+        public async Task<IActionResult> LeaveTrip(int id)
+        {
+            try
+            {
+                var left = await _tripService.LeaveTripAsync(id, User.GetUserId());
+                return left ? NoContent() : NotFound();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateTrip([FromForm] CreateTripDto dto, [FromForm] List<IFormFile>? photos)
         {

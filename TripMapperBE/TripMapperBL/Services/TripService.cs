@@ -55,6 +55,78 @@ namespace TripMapperBL.Services
             return _mapper.Map<TripAccessDto>(access);
         }
 
+        public async Task<IEnumerable<TripAccessDto>> GetCollaboratorsAsync(int tripId, int currentUserId)
+        {
+            var access = await _uow.TripAccess.GetAccessAsync(tripId, currentUserId);
+            if (access == null) throw new UnauthorizedAccessException("You do not have access to this trip.");
+
+            var collaborators = await _uow.TripAccess.GetByTripIdAsync(tripId);
+            return _mapper.Map<IEnumerable<TripAccessDto>>(collaborators);
+        }
+
+        public async Task<TripAccessDto> GrantAccessAsync(int tripId, int ownerUserId, string username, string accessLevel)
+        {
+            var ownerAccess = await _uow.TripAccess.GetAccessAsync(tripId, ownerUserId);
+            if (ownerAccess == null || ownerAccess.AccessLevel != "Owner")
+                throw new UnauthorizedAccessException("Only owner can manage trip access.");
+
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(accessLevel))
+                throw new ArgumentException("Username and access level are required.");
+
+            if (!string.Equals(accessLevel, "View", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(accessLevel, "Editor", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Access level must be View or Editor.");
+
+            var user = await _uow.Users.GetByUsernameAsync(username.Trim());
+            if (user == null) throw new KeyNotFoundException("User not found.");
+            if (user.Id == ownerUserId) throw new ArgumentException("The owner already has access to this trip.");
+
+            var existing = await _uow.TripAccess.GetAccessAsync(tripId, user.Id);
+            if (existing != null) throw new ArgumentException("This user already has access to the trip.");
+
+            var tripAccess = new TripAccess
+            {
+                TripId = tripId,
+                UserId = user.Id,
+                AccessLevel = accessLevel.Equals("Editor", StringComparison.OrdinalIgnoreCase)
+                    ? "Editor"
+                    : "View"
+            };
+
+            await _uow.TripAccess.AddAsync(tripAccess);
+            await _uow.CompleteAsync();
+
+            tripAccess.User = user;
+            return _mapper.Map<TripAccessDto>(tripAccess);
+        }
+
+        public async Task<bool> RevokeAccessAsync(int tripId, int ownerUserId, int targetUserId)
+        {
+            var ownerAccess = await _uow.TripAccess.GetAccessAsync(tripId, ownerUserId);
+            if (ownerAccess == null || ownerAccess.AccessLevel != "Owner")
+                throw new UnauthorizedAccessException("Only owner can manage trip access.");
+
+            if (targetUserId == ownerUserId)
+                throw new ArgumentException("The owner cannot be removed from the trip.");
+
+            var targetAccess = await _uow.TripAccess.GetAccessAsync(tripId, targetUserId);
+            if (targetAccess == null) return false;
+
+            return await _uow.TripAccess.DeleteAsync(tripId, targetUserId)
+                && await _uow.CompleteAsync();
+        }
+
+        public async Task<bool> LeaveTripAsync(int tripId, int userId)
+        {
+            var access = await _uow.TripAccess.GetAccessAsync(tripId, userId);
+            if (access == null) return false;
+            if (access.AccessLevel == "Owner")
+                throw new ArgumentException("The owner cannot leave the trip.");
+
+            return await _uow.TripAccess.DeleteAsync(tripId, userId)
+                && await _uow.CompleteAsync();
+        }
+
         public async Task<TripDto?> CreateTripAsync(CreateTripDto dto, int currentUserId)
         {
             var trip = await _uow.Trips.GetByTitleAsync(dto.Title, currentUserId);
@@ -132,8 +204,8 @@ namespace TripMapperBL.Services
             _uow.Trips.ClearTracking();
 
             var access = await _uow.TripAccess.GetAccessAsync(dto.Id, currentUserId);
-            if (access == null || access.AccessLevel != "Owner")
-                throw new UnauthorizedAccessException("Only owner can update trip.");
+            if (access == null || (access.AccessLevel != "Owner" && access.AccessLevel != "Editor"))
+                throw new UnauthorizedAccessException("Only owner or editor can update trip.");
 
             var trip = await _uow.Trips.GetByIdAsync(dto.Id);
             if (trip == null) return null;
@@ -176,26 +248,27 @@ namespace TripMapperBL.Services
             if (dto.DateVisited.HasValue) trip.DateVisited = dto.DateVisited;
             if (dto.DateFrom.HasValue) trip.DateFrom = dto.DateFrom;
 
-            // Revoke trip accesses & replace with modified list of users(who should have view access)
-            // (check actually if this is proper logic)
-
-            var existing = await _uow.TripAccess.GetByTripIdAsync(dto.Id);
-            foreach (var a in existing.Where(x => x.UserId != currentUserId))
-                _uow.TripAccess.Delete(a);
-
-            if (dto.SharedUsernames != null && dto.SharedUsernames.Any())
+            // Only owners can change collaborator access during a full trip save.
+            if (access.AccessLevel == "Owner")
             {
-                foreach (var username in dto.SharedUsernames)
-                {
-                    var user = await _uow.Users.GetByUsernameAsync(username);
-                    if (user == null || user.Id == currentUserId) continue;
+                var existing = await _uow.TripAccess.GetByTripIdAsync(dto.Id);
+                foreach (var a in existing.Where(x => x.UserId != currentUserId))
+                    _uow.TripAccess.Delete(a);
 
-                    await _uow.TripAccess.AddAsync(new TripAccess
+                if (dto.SharedUsernames != null && dto.SharedUsernames.Any())
+                {
+                    foreach (var username in dto.SharedUsernames)
                     {
-                        TripId = trip.Id,
-                        UserId = user.Id,
-                        AccessLevel = "View"
-                    });
+                        var user = await _uow.Users.GetByUsernameAsync(username);
+                        if (user == null || user.Id == currentUserId) continue;
+
+                        await _uow.TripAccess.AddAsync(new TripAccess
+                        {
+                            TripId = trip.Id,
+                            UserId = user.Id,
+                            AccessLevel = "View"
+                        });
+                    }
                 }
             }
 

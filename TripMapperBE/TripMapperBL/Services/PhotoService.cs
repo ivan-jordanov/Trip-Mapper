@@ -48,8 +48,9 @@ namespace TripMapperBL.Services
 
             if (trip == null) throw new KeyNotFoundException();
 
-            var owner = trip?.TripAccesses.Any(a => a.UserId == currentUserId && a.AccessLevel == "Owner") == true;
-            if (!owner) throw new UnauthorizedAccessException("Only owner can add photos to this trip.");
+            var canEdit = trip?.TripAccesses.Any(a => a.UserId == currentUserId
+                && (a.AccessLevel == "Owner" || a.AccessLevel == "Editor")) == true;
+            if (!canEdit) throw new UnauthorizedAccessException("Only owner or editor can add photos to this trip.");
 
             var photo = new Photo
             {
@@ -110,7 +111,8 @@ namespace TripMapperBL.Services
 
             if (trip == null) return 0;
 
-            if (!trip.TripAccesses.Any(a => a.UserId == currentUserId && a.AccessLevel == "Owner"))
+            if (!trip.TripAccesses.Any(a => a.UserId == currentUserId
+                && (a.AccessLevel == "Owner" || a.AccessLevel == "Editor")))
                 throw new UnauthorizedAccessException();
 
             // Get relevant pins
@@ -194,8 +196,9 @@ namespace TripMapperBL.Services
             {
                 var trip = await _uow.Trips.GetTripWithAccessesAsync((int)photo.TripId);
 
-                var owner = trip?.TripAccesses.Any(a => a.UserId == currentUserId && a.AccessLevel == "Owner") == true;
-                if (!owner) return false;
+                var canEdit = trip?.TripAccesses.Any(a => a.UserId == currentUserId
+                    && (a.AccessLevel == "Owner" || a.AccessLevel == "Editor")) == true;
+                if (!canEdit) return false;
             }
             else
             {

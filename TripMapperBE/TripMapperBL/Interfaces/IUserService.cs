@@ -12,7 +12,7 @@ namespace TripMapperBL.Interfaces
     {
         Task<User?> RegisterAsync(RegisterDto dto);
         Task<User?> AuthenticateAsync(string username, string password);
-        Task<IEnumerable<UserDto>> GetAllUsersAsync();
+        Task<IEnumerable<UserDto>> GetAllUsersAsync(string? search = null);
         Task<UserDto?> GetUserByIdAsync(int id);
         Task<bool> DeleteUserAsync(int id);
         Task<UserDto?> MapToUserDtoAsync(int id);

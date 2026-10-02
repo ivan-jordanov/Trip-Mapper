@@ -11,5 +11,6 @@ namespace TripMapperDAL.Interfaces
 
         Task<User?> GetByUsernameAsync(string username);
         Task<bool> ExistsAsync(string username);
+        Task<IEnumerable<User>> SearchAsync(string search);
     }
 }

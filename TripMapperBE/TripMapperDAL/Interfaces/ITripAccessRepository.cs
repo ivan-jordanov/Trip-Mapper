@@ -11,5 +11,6 @@ namespace TripMapperDAL.Interfaces
     {
         Task<TripAccess?> GetAccessAsync(int tripId, int userId);
         Task<List<TripAccess>> GetByTripIdAsync(int tripId);
+        Task<bool> DeleteAsync(int tripId, int userId);
     }
 }

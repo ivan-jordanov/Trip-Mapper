@@ -5,6 +5,7 @@ import { Box, Button } from '@mantine/core';
 import MapMarker from './MapMarker';
 import usePins from '../../hooks/usePins'; 
 import showError from '../../modules/showError';
+import configService from '../../services/configService';
 
 // fix marker icon paths for CRA and bundlers
 delete L.Icon.Default.prototype._getIconUrl;
@@ -48,6 +49,7 @@ const Recenter = ({ viewCenter, zoom }) => {
 };
 
 const MapView = ({ initialCenter = [51.5074, -0.1278], initialZoom = 13, pins, previewMarker, onMapClick }) => {
+  const [CARTO_MAP_API_KEY, setCartoMapApiKey] = useState('');
   const mapRef = useRef(null);
   // viewCenter: controls the map's visible center (initial geolocation only)
   const [viewCenter, setViewCenter] = useState(initialCenter);
@@ -59,6 +61,12 @@ const MapView = ({ initialCenter = [51.5074, -0.1278], initialZoom = 13, pins, p
 
   // Fetch pins from backend
   const { pins: backendPins, loading, fetchPins } = usePins();
+
+  useEffect(() => {
+    configService.getMapApiKey()
+      .then(setCartoMapApiKey)
+      .catch((err) => showError(err.response?.data?.message || err.message || 'Unable to load map configuration.'));
+  }, []);
 
   const hasProvidedPins = Array.isArray(pins);
 
@@ -99,22 +107,24 @@ const MapView = ({ initialCenter = [51.5074, -0.1278], initialZoom = 13, pins, p
     return () => { mounted = false; };
   }, [hasProvidedPins]);
 
-  // Watch for resizes of the map container and trigger invalidateSize on the map instance
+  // Resize the map when the viewport changes without observing the map container itself.
   useEffect(() => {
-    const el = mapContainerRef.current;
-    if (!el) return;
-    let ro;
-    try {
-      ro = new ResizeObserver(() => {
-        try { mapRef.current?.invalidateSize?.(true); } catch (err) { showError('Failed to resize map'); }
-      });
-      ro.observe(el);
-    } catch (err) {
-      // ResizeObserver might not be supported; ignore
-    }
-    // also trigger an initial invalidate to ensure proper sizing when mapRef exists
-    try { mapRef.current?.invalidateSize?.(true); } catch (err) { showError('Failed to resize map'); }
-    return () => { try { ro?.disconnect?.(); } catch (err) { showError('Failed to disconnect resize observer'); } };
+    let resizeTimer;
+
+    const invalidateMapSize = () => {
+      if (resizeTimer) return;
+      resizeTimer = setTimeout(() => {
+        resizeTimer = undefined;
+        try { mapRef.current?.invalidateSize?.({ pan: false, debounceMoveend: true }); } catch (err) { showError('Failed to resize map'); }
+      }, 0);
+    };
+
+    window.addEventListener('resize', invalidateMapSize);
+    invalidateMapSize();
+    return () => {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      window.removeEventListener('resize', invalidateMapSize);
+    };
   }, []);
 
   // NOTE: Recenter component handles syncing the map view. No legacy setView effect.
@@ -137,13 +147,12 @@ const MapView = ({ initialCenter = [51.5074, -0.1278], initialZoom = 13, pins, p
   const markersToRender = markerSource.filter(
     (pin) => pin.latitude != null && pin.longitude != null
   );
-
   return (
     <Box id="map" ref={mapContainerRef} sx={{ height: '100%', position: 'relative' }}>
       <MapContainer center={viewCenter} whenCreated={(m) => { mapRef.current = m; try { m.invalidateSize(true); } catch (err) {} }} zoom={initialZoom} style={{ height: '100%', width: '100%' }}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, © <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          url={`https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=${CARTO_MAP_API_KEY}`}
         />
         <ClickHandler
           onSetPreview={shouldAllowPreviewCreation ? onSetPreview : null}

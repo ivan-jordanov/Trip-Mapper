@@ -32,6 +32,26 @@ const tripService = {
     return response.data;
   },
 
+  getCollaborators: async (id) => {
+    const response = await axios.get(`/Trips/${id}/collaborators`);
+    return response.data;
+  },
+
+  grantAccess: async (id, username, accessLevel = 'View') => {
+    const response = await axios.post(`/Trips/${id}/access`, { username, accessLevel });
+    return response.data;
+  },
+
+  revokeAccess: async (id, userId) => {
+    const response = await axios.delete(`/Trips/${id}/access/${userId}`);
+    return response.data;
+  },
+
+  leaveTrip: async (id) => {
+    const response = await axios.delete(`/Trips/${id}/leave`);
+    return response.data;
+  },
+
   create: async (tripData) => {
     const response = await axios.post('/Trips', tripData);
     return response.data;

@@ -82,9 +82,11 @@ namespace TripMapperBL.Services
             return true;
         }
 
-        public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
+        public async Task<IEnumerable<UserDto>> GetAllUsersAsync(string? search = null)
         {
-            var users = await _uow.Users.GetAllAsync();
+            var users = string.IsNullOrWhiteSpace(search)
+                ? await _uow.Users.GetAllAsync()
+                : await _uow.Users.SearchAsync(search);
             return _mapper.Map<IEnumerable<UserDto>>(users);
         }
 

@@ -16,14 +16,27 @@ namespace TripMapperDAL.Repositories
         public async Task<TripAccess?> GetAccessAsync(int tripId, int userId)
         {
             return await _context.TripAccesses
+                .Include(x => x.User)
                 .FirstOrDefaultAsync(x => x.TripId == tripId && x.UserId == userId);
         }
 
         public async Task<List<TripAccess>> GetByTripIdAsync(int tripId)
         {
             return await _context.TripAccesses
+                .Include(x => x.User)
                 .Where(x => x.TripId == tripId)
                 .ToListAsync();
+        }
+
+        public async Task<bool> DeleteAsync(int tripId, int userId)
+        {
+            var access = await _context.TripAccesses
+                .FirstOrDefaultAsync(x => x.TripId == tripId && x.UserId == userId);
+
+            if (access == null) return false;
+
+            _context.TripAccesses.Remove(access);
+            return true;
         }
     }
 }

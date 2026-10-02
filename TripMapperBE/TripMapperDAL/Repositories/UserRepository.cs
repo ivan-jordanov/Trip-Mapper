@@ -22,5 +22,13 @@ namespace TripMapperDAL.Repositories
             return await _context.Users.AnyAsync(u => u.Username == username.ToLower());
         }
 
+        public async Task<IEnumerable<User>> SearchAsync(string search)
+        {
+            var normalizedSearch = search.Trim().ToLower();
+            return await _context.Users
+                .Where(u => u.Username.ToLower().Contains(normalizedSearch))
+                .ToListAsync();
+        }
+
     }
 }

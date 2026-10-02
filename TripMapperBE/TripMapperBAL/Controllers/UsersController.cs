@@ -21,8 +21,8 @@ namespace TripMapper.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetUsers()
-            => Ok(await _userService.GetAllUsersAsync());
+        public async Task<IActionResult> GetUsers([FromQuery] string? search)
+            => Ok(await _userService.GetAllUsersAsync(search));
 
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetUser(int id)

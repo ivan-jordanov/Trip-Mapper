@@ -5,6 +5,7 @@ import { IconUpload, IconX } from '@tabler/icons-react';
 import { useParams } from 'react-router-dom';
 import useTrips from '../../hooks/useTrips';
 import { useNavigate } from 'react-router-dom';
+import TripAccessPanel from './TripAccessPanel';
 
 const TripForm = () => {
   const { id } = useParams();
@@ -23,6 +24,7 @@ const TripForm = () => {
   const [newPhotos, setNewPhotos] = useState([]);
   const [newPhotoPreviews, setNewPhotoPreviews] = useState([]);
   const [photoError, setPhotoError] = useState('');
+  const [sharedUsernames, setSharedUsernames] = useState([]);
 
   const formatDateForInput = (value) => {
     if (!value) return '';
@@ -154,12 +156,12 @@ const TripForm = () => {
       });
     }
     
-    if (values.sharedWith) {
+    if (id && values.sharedWith) {
       const usernames = values.sharedWith.split(',').map(u => u.trim()).filter(u => u);
-      usernames.forEach(username => {
-        formData.append('sharedUsernames', username);
-      });
+      usernames.forEach(username => formData.append('sharedUsernames', username));
     }
+
+    if (!id) sharedUsernames.forEach((username) => formData.append('sharedUsernames', username));
     
     if (photosToDelete.length > 0) {
       photosToDelete.forEach((photoId) => formData.append('photoIdsToDelete', photoId));
@@ -304,13 +306,21 @@ const TripForm = () => {
                 </Stack>
               </div>
 
-              <TextInput
-                label="Share with users"
-                placeholder="Enter usernames separated by commas"
-                description="Leave empty to keep private"
-                key={form.key('sharedWith')}
-                {...form.getInputProps('sharedWith')}
-              />
+              {!id && (
+                <TripAccessPanel
+                  selectedUsernames={sharedUsernames}
+                  onSelectedUsernamesChange={setSharedUsernames}
+                />
+              )}
+              {id && (
+                <TextInput
+                  label="Share with users"
+                  placeholder="Enter usernames separated by commas"
+                  description="Leave empty to keep private"
+                  key={form.key('sharedWith')}
+                  {...form.getInputProps('sharedWith')}
+                />
+              )}
 
               <Group position="center" mt="md">
                 <Button type="submit" size="md" loading={isLoading}>

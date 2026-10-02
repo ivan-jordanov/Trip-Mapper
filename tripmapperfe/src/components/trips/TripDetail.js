@@ -14,6 +14,7 @@ import {
   SimpleGrid,
   Button,
   Modal,
+  SegmentedControl,
 } from '@mantine/core';
 import {
   IconCalendar,
@@ -27,10 +28,14 @@ import {
 import useTrips from '../../hooks/useTrips';
 import showError from '../../modules/showError';
 import TripVisualization from './TripVisualization';
+import TripTimeline from './TripTimeline';
+import TripAccessPanel from './TripAccessPanel';
+import { useAuthContext } from '../../context/AuthContext';
 
 const TripDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuthContext();
 
   const {
     tripDetails: trip,
@@ -43,6 +48,7 @@ const TripDetail = () => {
 
   const [deleteModalOpened, setDeleteModalOpened] = useState(false);
   const [visualizeModalOpened, setVisualizeModalOpened] = useState(false);
+  const [viewMode, setViewMode] = useState('details');
   const [deleting, setDeleting] = useState(false);
   const altImageTrip = 'https://images.pexels.com/photos/8058392/pexels-photo-8058392.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
   const altImagePin = 'https://images.pexels.com/photos/68704/pexels-photo-68704.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
@@ -91,6 +97,7 @@ const TripDetail = () => {
 
   const showTripPhotoSpoiler = tripPhotos.length > 3;
   const isOwner = tripAccess ? tripAccess.accessLevel === 'Owner' : false;
+  const canEdit = isOwner || tripAccess?.accessLevel === 'Editor';
 
   const handleDelete = async () => {
     try {
@@ -114,7 +121,7 @@ const TripDetail = () => {
           {/* Header with Title and Action Buttons */}
           <Group justify="space-between" align="flex-start">
             <Title order={2}>{trip.title}</Title>
-            {isOwner && (
+            {canEdit && (
               <Group gap="sm">
                 <Button
                   variant="light"
@@ -132,17 +139,33 @@ const TripDetail = () => {
                 >
                   Edit
                 </Button>
-                <Button
-                  variant="light"
-                  color="red"
-                  leftSection={<IconTrash size={16} />}
-                  onClick={() => setDeleteModalOpened(true)}
-                >
-                  Delete
-                </Button>
+                {isOwner && (
+                  <Button
+                    variant="light"
+                    color="red"
+                    leftSection={<IconTrash size={16} />}
+                    onClick={() => setDeleteModalOpened(true)}
+                  >
+                    Delete
+                  </Button>
+                )}
               </Group>
             )}
           </Group>
+
+          <SegmentedControl
+            value={viewMode}
+            onChange={setViewMode}
+            data={[
+              { label: 'Details', value: 'details' },
+              { label: 'Timeline', value: 'timeline' },
+            ]}
+          />
+
+          {viewMode === 'timeline' && <TripTimeline tripDetails={trip} />}
+
+          {viewMode === 'details' && (
+            <>
 
           {/* Trip Photos */}
           {tripPhotos.length > 0 && (
@@ -232,8 +255,17 @@ const TripDetail = () => {
             )}
           </Stack>
 
+            </>
+          )}
+
+          <TripAccessPanel
+            tripId={id}
+            isOwner={isOwner}
+            currentUserId={user?.id}
+          />
+
           {/* Pins Section */}
-          {trip.pins && trip.pins.length > 0 && (
+          {viewMode === 'details' && trip.pins && trip.pins.length > 0 && (
             <div>
               <Group gap="xs" mb="sm">
                 <IconMapPin size={18} stroke={1.5} />

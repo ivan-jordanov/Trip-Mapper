@@ -5,7 +5,6 @@ import { AppShell } from '@mantine/core';
 
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
-
 import HomePage from './pages/HomePage';
 import TripsPage from './pages/TripsPage';
 import TripDetail from './components/trips/TripDetail';
