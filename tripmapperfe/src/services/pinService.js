@@ -22,6 +22,13 @@ const pinService = {
     return response.data;
   },
 
+  searchPins: async (query) => {
+    const response = await axios.get('/Pins', {
+      params: { title: query, page: 1, pageSize: 20 },
+    });
+    return response.data;
+  },
+
   create: async (pinData) => {
     const response = await axios.post('/Pins', pinData);
     return response.data;

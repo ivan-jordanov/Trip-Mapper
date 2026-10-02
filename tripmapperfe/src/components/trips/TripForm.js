@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Flex, Group, TextInput, Textarea, Stack, Card, Title, FileInput, Image, Text, SimpleGrid, Loader } from '@mantine/core';
+import { ActionIcon, Badge, Button, Flex, Group, TextInput, Textarea, Stack, Card, Title, FileInput, Image, Text, SimpleGrid, Loader } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconUpload, IconX } from '@tabler/icons-react';
 import { useParams } from 'react-router-dom';
 import useTrips from '../../hooks/useTrips';
 import { useNavigate } from 'react-router-dom';
 import TripAccessPanel from './TripAccessPanel';
+import pinService from '../../services/pinService';
+import usersService from '../../services/usersService';
 
 const TripForm = () => {
   const { id } = useParams();
@@ -25,6 +27,14 @@ const TripForm = () => {
   const [newPhotoPreviews, setNewPhotoPreviews] = useState([]);
   const [photoError, setPhotoError] = useState('');
   const [sharedUsernames, setSharedUsernames] = useState([]);
+  const [selectedPinTitles, setSelectedPinTitles] = useState([]);
+  const [pinSearch, setPinSearch] = useState('');
+  const [pinOptions, setPinOptions] = useState([]);
+  const [searchingPins, setSearchingPins] = useState(false);
+  const [selectedSharedUsernames, setSelectedSharedUsernames] = useState([]);
+  const [userSearch, setUserSearch] = useState('');
+  const [userOptions, setUserOptions] = useState([]);
+  const [searchingUsers, setSearchingUsers] = useState(false);
 
   const formatDateForInput = (value) => {
     if (!value) return '';
@@ -82,6 +92,56 @@ const TripForm = () => {
     }
   }, [id, tripDetails, fetchTripDetails]);
 
+  useEffect(() => {
+    if (pinSearch.trim().length < 2) {
+      setPinOptions([]);
+      return undefined;
+    }
+
+    let active = true;
+    const timer = setTimeout(async () => {
+      setSearchingPins(true);
+      try {
+        const pins = await pinService.searchPins(pinSearch.trim());
+        if (active) setPinOptions([...new Set(pins.map((pin) => pin.title).filter(Boolean))]);
+      } catch (err) {
+        if (active) setPinOptions([]);
+      } finally {
+        if (active) setSearchingPins(false);
+      }
+    }, 250);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [pinSearch]);
+
+  useEffect(() => {
+    if (userSearch.trim().length < 2) {
+      setUserOptions([]);
+      return undefined;
+    }
+
+    let active = true;
+    const timer = setTimeout(async () => {
+      setSearchingUsers(true);
+      try {
+        const users = await usersService.searchUsers(userSearch.trim());
+        if (active) setUserOptions([...new Set(users.map((user) => user.username).filter(Boolean))]);
+      } catch (err) {
+        if (active) setUserOptions([]);
+      } finally {
+        if (active) setSearchingUsers(false);
+      }
+    }, 250);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [userSearch]);
+
   // Update form when tripDetails changes
   useEffect(() => {
     if (tripDetails) {
@@ -96,6 +156,8 @@ const TripForm = () => {
           : '',
       });
       setExistingPhotos((tripDetails.photos || []).filter(p => !p.pinId));
+      setSelectedPinTitles((tripDetails.pins || []).map((pin) => pin.title).filter(Boolean));
+      setSelectedSharedUsernames(tripDetails.sharedUsernames || tripDetails.sharedWith || []);
       setPhotosToDelete([]);
       setNewPhotos([]);
     }
@@ -137,6 +199,34 @@ const TripForm = () => {
     setNewPhotos((prev) => prev.filter((file) => file.name !== fileName));
   };
 
+  const handlePinSelect = (title) => {
+    if (selectedPinTitles.includes(title)) return;
+    const nextTitles = [...selectedPinTitles, title];
+    setSelectedPinTitles(nextTitles);
+    form.setFieldValue('pins', nextTitles.join(', '));
+    setPinSearch('');
+  };
+
+  const handlePinRemove = (title) => {
+    const nextTitles = selectedPinTitles.filter((value) => value !== title);
+    setSelectedPinTitles(nextTitles);
+    form.setFieldValue('pins', nextTitles.join(', '));
+  };
+
+  const handleUserSelect = (username) => {
+    if (selectedSharedUsernames.includes(username)) return;
+    const nextUsernames = [...selectedSharedUsernames, username];
+    setSelectedSharedUsernames(nextUsernames);
+    form.setFieldValue('sharedWith', nextUsernames.join(', '));
+    setUserSearch('');
+  };
+
+  const handleUserRemove = (username) => {
+    const nextUsernames = selectedSharedUsernames.filter((value) => value !== username);
+    setSelectedSharedUsernames(nextUsernames);
+    form.setFieldValue('sharedWith', nextUsernames.join(', '));
+  };
+
   const handleSubmit = async (values) => {
     if (existingPhotos.length + newPhotos.length > 5) {
       setPhotoError('You can attach up to 5 photos per trip.');
@@ -149,15 +239,16 @@ const TripForm = () => {
     formData.append('dateFrom', values.dateFrom || '');
     formData.append('dateVisited', values.dateVisited || '');
     
-    if (values.pins) {
-      const pinTitles = values.pins.split(',').map(p => p.trim()).filter(p => p);
-      pinTitles.forEach(pinTitle => {
+    const pinsValue = id ? values.pins : selectedPinTitles.join(', ');
+    const pinTitles = pinsValue.split(',').map(p => p.trim()).filter(p => p);
+    if (pinTitles.length > 0) {
+      pinTitles.forEach((pinTitle) => {
         formData.append('pins', pinTitle);
       });
     }
     
-    if (id && values.sharedWith) {
-      const usernames = values.sharedWith.split(',').map(u => u.trim()).filter(u => u);
+    if (id && selectedSharedUsernames.length > 0) {
+      const usernames = selectedSharedUsernames.map((username) => username.trim()).filter(Boolean);
       usernames.forEach(username => formData.append('sharedUsernames', username));
     }
 
@@ -169,16 +260,20 @@ const TripForm = () => {
 
     newPhotos.forEach((file) => formData.append('photos', file));
 
-    if (id) {
-      formData.append('id', id);
-      if (tripDetails?.rowVersion) {
-        formData.append('rowVersion', tripDetails.rowVersion);
+    try {
+      if (id) {
+        formData.append('id', id);
+        if (tripDetails?.rowVersion) {
+          formData.append('rowVersion', tripDetails.rowVersion);
+        }
+        await updateTrip(id, formData);
+        navigate(`/trips/${id}`);
+      } else {
+        await createTrip(formData);
+        navigate('/trips');
       }
-      await updateTrip(id, formData);
-      navigate(`/trips/${id}`);
-    } else {
-      await createTrip(formData);
-      navigate('/trips');
+    } catch {
+      return;
     }
   };
 
@@ -229,13 +324,54 @@ const TripForm = () => {
                 />
               </Group>
 
-              <TextInput
-                label="Add Pins to Trip"
-                placeholder="Enter pin titles separated by commas"
-                description="You can add existing pins to this trip"
-                key={form.key('pins')}
-                {...form.getInputProps('pins')}
-              />
+              <Stack gap="xs">
+                <TextInput
+                  label="Add Pins to Trip"
+                  placeholder="Search your pins by title"
+                  description="Select existing pins to add to this trip"
+                  value={pinSearch}
+                  onChange={(event) => setPinSearch(event.currentTarget.value)}
+                  rightSection={searchingPins ? <Loader size="xs" /> : null}
+                />
+                {pinOptions.length > 0 && (
+                  <Stack gap={4}>
+                    {pinOptions.map((title) => (
+                      <Button
+                        key={title}
+                        variant={selectedPinTitles.includes(title) ? 'light' : 'subtle'}
+                        color={selectedPinTitles.includes(title) ? 'teal' : 'gray'}
+                        justify="flex-start"
+                        disabled={selectedPinTitles.includes(title)}
+                        onClick={() => handlePinSelect(title)}
+                      >
+                        {title}
+                      </Button>
+                    ))}
+                  </Stack>
+                )}
+                {selectedPinTitles.length > 0 && (
+                  <Group gap="xs">
+                    {selectedPinTitles.map((title) => (
+                      <Badge
+                        key={title}
+                        rightSection={(
+                          <ActionIcon
+                            size="xs"
+                            variant="transparent"
+                            color="gray"
+                            title={`Remove ${title}`}
+                            onClick={() => handlePinRemove(title)}
+                          >
+                            <IconX size={12} />
+                          </ActionIcon>
+                        )}
+                      >
+                        {title}
+                      </Badge>
+                    ))}
+                  </Group>
+                )}
+              </Stack>
 
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '14px' }}>Photos (max 5)</label>
@@ -313,13 +449,54 @@ const TripForm = () => {
                 />
               )}
               {id && (
-                <TextInput
-                  label="Share with users"
-                  placeholder="Enter usernames separated by commas"
-                  description="Leave empty to keep private"
-                  key={form.key('sharedWith')}
-                  {...form.getInputProps('sharedWith')}
-                />
+                <Stack gap="xs">
+                  <TextInput
+                    label="Share with users"
+                    placeholder="Search users by username"
+                    description="Select users who should have access to this trip"
+                    value={userSearch}
+                    onChange={(event) => setUserSearch(event.currentTarget.value)}
+                    rightSection={searchingUsers ? <Loader size="xs" /> : null}
+                  />
+                  {userOptions.length > 0 && (
+                    <Stack gap={4}>
+                      {userOptions.map((username) => (
+                        <Button
+                          key={username}
+                          variant={selectedSharedUsernames.includes(username) ? 'light' : 'subtle'}
+                          color={selectedSharedUsernames.includes(username) ? 'teal' : 'gray'}
+                          justify="flex-start"
+                          disabled={selectedSharedUsernames.includes(username)}
+                          onClick={() => handleUserSelect(username)}
+                        >
+                          {username}
+                        </Button>
+                      ))}
+                    </Stack>
+                  )}
+                  {selectedSharedUsernames.length > 0 && (
+                    <Group gap="xs">
+                      {selectedSharedUsernames.map((username) => (
+                        <Badge
+                          key={username}
+                          rightSection={(
+                            <ActionIcon
+                              size="xs"
+                              variant="transparent"
+                              color="gray"
+                              title={`Remove ${username}`}
+                              onClick={() => handleUserRemove(username)}
+                            >
+                              <IconX size={12} />
+                            </ActionIcon>
+                          )}
+                        >
+                          {username}
+                        </Badge>
+                      ))}
+                    </Group>
+                  )}
+                </Stack>
               )}
 
               <Group position="center" mt="md">
