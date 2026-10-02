@@ -5,11 +5,20 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import 'leaflet/dist/leaflet.css';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      staleTime: 30 * 1000,
+    },
+  },
+});
 root.render(
   <React.StrictMode> 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -18,6 +27,7 @@ root.render(
       <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
      crossorigin=""></script>
+    <QueryClientProvider client={queryClient}>
     <MantineProvider
       withNormalizeCSS
       withGlobalStyles
@@ -31,6 +41,7 @@ root.render(
       <Notifications />
       <App />
     </MantineProvider>
+    </QueryClientProvider>
   </React.StrictMode>
 );
 

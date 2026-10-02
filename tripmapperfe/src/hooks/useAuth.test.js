@@ -2,6 +2,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import useAuth from './useAuth';
 import authService from '../services/authService';
 import showStatus from '../modules/showStatus';
+import { createQueryWrapper } from '../testUtils';
 
 jest.mock('../services/authService', () => ({
   __esModule: true,
@@ -18,13 +19,16 @@ jest.mock('../modules/showError', () => jest.fn());
 jest.mock('../modules/showStatus', () => jest.fn());
 
 describe('useAuth', () => {
+  let wrapper;
+
   beforeEach(() => {
     jest.clearAllMocks();
     localStorage.clear();
+    wrapper = createQueryWrapper();
   });
 
   it('finishes initial load with no token', async () => {
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -40,7 +44,7 @@ describe('useAuth', () => {
     localStorage.setItem('token', 'fake-token');
     authService.getCurrentUser.mockResolvedValue(user);
 
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -55,7 +59,7 @@ describe('useAuth', () => {
     const loginResponse = { token: 'abc123' };
     authService.login.mockResolvedValue(loginResponse);
 
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth(), { wrapper });
     let response;
 
     await waitFor(() => {
@@ -75,7 +79,7 @@ describe('useAuth', () => {
     localStorage.setItem('token', 'fake-token');
     authService.getCurrentUser.mockResolvedValue({ id: 1, username: 'ivanj' });
 
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.user).toEqual({ id: 1, username: 'ivanj' });
@@ -97,7 +101,7 @@ describe('useAuth', () => {
     authService.getCurrentUser.mockResolvedValue(initialUser);
     authService.updateCurrentUser.mockResolvedValue(updatedUser);
 
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.user).toEqual(initialUser);
@@ -117,7 +121,7 @@ describe('useAuth', () => {
   it('changes password successfully', async () => {
     authService.changePassword.mockResolvedValue({ message: 'Password changed successfully.' });
 
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);

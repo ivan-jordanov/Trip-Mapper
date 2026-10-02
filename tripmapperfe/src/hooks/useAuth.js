@@ -1,141 +1,129 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import authService from '../services/authService';
 import showError from '../modules/showError';
 import showStatus from '../modules/showStatus';
 
+const getErrorMessage = (error) => {
+  const responseData = error?.response?.data;
+
+  if (typeof responseData === 'string' && responseData.trim()) return responseData;
+  if (typeof responseData?.message === 'string' && responseData.message.trim()) return responseData.message;
+  return error?.message || 'Request failed.';
+};
+
 const useAuth = () => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
+  const [loggedOut, setLoggedOut] = useState(false);
+  const [sessionInvalid, setSessionInvalid] = useState(false);
+  const [userOverride, setUserOverride] = useState(undefined);
+  const hasToken = Boolean(localStorage.getItem('token'));
 
-  const getErrorMessage = (err) => {
-    const responseData = err?.response?.data;
+  const userQuery = useQuery({
+    queryKey: ['current-user'],
+    queryFn: authService.getCurrentUser,
+    enabled: hasToken && !sessionInvalid,
+    retry: false,
+  });
 
-    if (typeof responseData === 'string' && responseData.trim().length > 0) {
-      return responseData;
-    }
+  const loginMutation = useMutation({ mutationFn: ({ username, password }) => authService.login(username, password) });
+  const registerMutation = useMutation({ mutationFn: (userData) => authService.register(userData) });
+  const updateMutation = useMutation({
+    mutationFn: (accountData) => authService.updateCurrentUser(accountData),
+    onSuccess: (updatedUser) => queryClient.setQueryData(['current-user'], updatedUser),
+  });
+  const passwordMutation = useMutation({ mutationFn: (passwordData) => authService.changePassword(passwordData) });
 
-    if (typeof responseData?.message === 'string' && responseData.message.trim().length > 0) {
-      return responseData.message;
-    }
-
-    return err.message;
-  };
-
-  if (error) {
-      showError(error);
-  }
-  const fetchUser = async () => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const userData = await authService.getCurrentUser();
-        setUser(userData);
-      } catch (err) {
-        setError(getErrorMessage(err));
-        localStorage.removeItem('token');
-      }
-    }
-    setLoading(false);
-  };
+  const error = userQuery.error || loginMutation.error || registerMutation.error
+    || updateMutation.error || passwordMutation.error;
+  const errorMessage = error ? getErrorMessage(error) : null;
 
   useEffect(() => {
-    fetchUser();
-  }, []);
+    if (userQuery.isError && userQuery.error?.response?.status === 401) {
+      localStorage.removeItem('token');
+      setSessionInvalid(true);
+      setLoggedOut(true);
+      queryClient.removeQueries({ queryKey: ['current-user'] });
+    }
+  }, [queryClient, userQuery.isError, userQuery.error]);
 
-  const refreshUser = async () => {
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    if (errorMessage) showError(errorMessage);
+  }, [errorMessage]);
+
+  const fetchUser = async () => {
+    if (!localStorage.getItem('token')) return null;
     try {
-      await fetchUser();
-    } catch (err) {
-      setError(getErrorMessage(err));
-      throw err;
-    } finally {
-      setLoading(false);
+      return await queryClient.fetchQuery({
+        queryKey: ['current-user'],
+        queryFn: authService.getCurrentUser,
+      });
+    } catch {
+      localStorage.removeItem('token');
+      setSessionInvalid(true);
+      setLoggedOut(true);
+      queryClient.removeQueries({ queryKey: ['current-user'] });
+      return null;
     }
   };
 
+  const refreshUser = async () => fetchUser();
+
   const login = async (username, password) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const userData = await authService.login(username, password);
-      fetchUser();
-      showStatus('Login successful');
-      return userData;
-    } catch (err) {
-      setError(getErrorMessage(err));
-      throw err;
-    } finally {
-      setLoading(false);
-    }
+    setLoggedOut(false);
+    setSessionInvalid(false);
+    setUserOverride(undefined);
+    const response = await loginMutation.mutateAsync({ username, password });
+    await fetchUser();
+    showStatus('Login successful');
+    return response;
   };
 
   const register = async (userData) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await authService.register(userData);
-      fetchUser();
-      showStatus('Registration successful');
-      return response;
-    } catch (err) {
-      setError(getErrorMessage(err));
-      throw err;
-    } finally {
-      setLoading(false);
-    }
+    setLoggedOut(false);
+    setSessionInvalid(false);
+    setUserOverride(undefined);
+    const response = await registerMutation.mutateAsync(userData);
+    await fetchUser();
+    showStatus('Registration successful');
+    return response;
   };
 
   const logout = async () => {
     await authService.logout();
+    setLoggedOut(true);
+    queryClient.setQueryData(['current-user'], null);
     showStatus('Logged out successfully');
-    setUser(null);
   };
 
   const updateAccount = async (accountData) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const updatedUser = await authService.updateCurrentUser(accountData);
-      setUser(updatedUser);
-      showStatus('Account updated successfully');
-      return updatedUser;
-    } catch (err) {
-      setError(getErrorMessage(err));
-      throw err;
-    } finally {
-      setLoading(false);
-    }
+    const updatedUser = await updateMutation.mutateAsync(accountData);
+    setUserOverride(updatedUser);
+    queryClient.setQueryData(['current-user'], updatedUser);
+    showStatus('Account updated successfully');
+    return updatedUser;
   };
 
   const changePassword = async (passwordData) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await authService.changePassword(passwordData);
-      showStatus('Password changed successfully');
-      return response;
-    } catch (err) {
-      setError(getErrorMessage(err));
-      throw err;
-    } finally {
-      setLoading(false);
-    }
+    const response = await passwordMutation.mutateAsync(passwordData);
+    showStatus('Password changed successfully');
+    return response;
   };
 
+  const loading = userQuery.isFetching || loginMutation.isPending || registerMutation.isPending
+    || updateMutation.isPending || passwordMutation.isPending;
+
   return {
-    user,
+    user: loggedOut ? null : userOverride !== undefined ? userOverride : userQuery.data || null,
     loading,
-    error,
+    error: errorMessage,
     login,
     register,
     logout,
     refreshUser,
     updateAccount,
     changePassword,
-    isAuthenticated: !!user,
+    isAuthenticated: !loggedOut && Boolean(userQuery.data),
   };
 };
 

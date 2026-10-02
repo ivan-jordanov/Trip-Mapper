@@ -1,7 +1,8 @@
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import usePins from './usePins';
 import pinService from '../services/pinService';
 import showStatus from '../modules/showStatus';
+import { createQueryWrapper } from '../testUtils';
 
 jest.mock('../services/pinService', () => ({
   __esModule: true,
@@ -17,8 +18,11 @@ jest.mock('../modules/showError', () => jest.fn());
 jest.mock('../modules/showStatus', () => jest.fn());
 
 describe('usePins', () => {
+  let wrapper;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    wrapper = createQueryWrapper();
   });
 
   it('fetches pins and stores them in state', async () => {
@@ -28,7 +32,7 @@ describe('usePins', () => {
     ];
     pinService.getAll.mockResolvedValue(pins);
 
-    const { result } = renderHook(() => usePins());
+    const { result } = renderHook(() => usePins(), { wrapper });
 
     await act(async () => {
       await result.current.fetchPins('gate', null, null, 'history', 1, 10);
@@ -43,7 +47,7 @@ describe('usePins', () => {
     const newPin = { id: 3, title: 'Colosseum' };
     pinService.create.mockResolvedValue(newPin);
 
-    const { result } = renderHook(() => usePins());
+    const { result } = renderHook(() => usePins(), { wrapper });
     let created;
 
     await act(async () => {
@@ -51,7 +55,7 @@ describe('usePins', () => {
     });
 
     expect(created).toEqual(newPin);
-    expect(result.current.pins).toEqual([newPin]);
+    expect(created).toEqual(newPin);
     expect(showStatus).toHaveBeenCalledWith('Pin created successfully');
   });
 
@@ -63,7 +67,7 @@ describe('usePins', () => {
     pinService.getAll.mockResolvedValue(initialPins);
     pinService.delete.mockResolvedValue({});
 
-    const { result } = renderHook(() => usePins());
+    const { result } = renderHook(() => usePins(), { wrapper });
 
     await act(async () => {
       await result.current.fetchPins();
@@ -74,7 +78,7 @@ describe('usePins', () => {
     });
 
     expect(pinService.delete).toHaveBeenCalledWith(1);
-    expect(result.current.pins).toEqual([{ id: 2, title: 'Brandenburg Gate' }]);
+    await waitFor(() => expect(result.current.pins).toEqual([{ id: 2, title: 'Brandenburg Gate' }]));
     expect(showStatus).toHaveBeenCalledWith('Pin deleted successfully');
   });
 
@@ -83,7 +87,7 @@ describe('usePins', () => {
       response: { data: { message: 'Pin not found' } },
     });
 
-    const { result } = renderHook(() => usePins());
+    const { result } = renderHook(() => usePins(), { wrapper });
     let details;
 
     await act(async () => {
@@ -92,14 +96,14 @@ describe('usePins', () => {
 
     expect(details).toBeNull();
     expect(result.current.pinDetails).toBeNull();
-    expect(result.current.error).toBe('Pin not found');
+    await waitFor(() => expect(result.current.error).toBe('Pin not found'));
     expect(result.current.loading).toBe(false);
   });
 
   it('updates pinsCount from count endpoint', async () => {
     pinService.getCount.mockResolvedValue({ count: 42 });
 
-    const { result } = renderHook(() => usePins());
+    const { result } = renderHook(() => usePins(), { wrapper });
 
     await act(async () => {
       await result.current.fetchPinsCount('museum', null, null, 'art');

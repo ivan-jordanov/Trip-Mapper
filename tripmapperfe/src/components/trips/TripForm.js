@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { ActionIcon, Badge, Button, Flex, Group, TextInput, Textarea, Stack, Card, Title, FileInput, Image, Text, SimpleGrid, Loader } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconUpload, IconX } from '@tabler/icons-react';
@@ -29,12 +30,22 @@ const TripForm = () => {
   const [sharedUsernames, setSharedUsernames] = useState([]);
   const [selectedPinTitles, setSelectedPinTitles] = useState([]);
   const [pinSearch, setPinSearch] = useState('');
-  const [pinOptions, setPinOptions] = useState([]);
-  const [searchingPins, setSearchingPins] = useState(false);
   const [selectedSharedUsernames, setSelectedSharedUsernames] = useState([]);
   const [userSearch, setUserSearch] = useState('');
-  const [userOptions, setUserOptions] = useState([]);
-  const [searchingUsers, setSearchingUsers] = useState(false);
+  const pinSearchQuery = useQuery({
+    queryKey: ['pin-search', pinSearch.trim()],
+    queryFn: () => pinService.searchPins(pinSearch.trim()),
+    enabled: pinSearch.trim().length >= 2,
+  });
+  const userSearchQuery = useQuery({
+    queryKey: ['user-search', userSearch.trim()],
+    queryFn: () => usersService.searchUsers(userSearch.trim()),
+    enabled: userSearch.trim().length >= 2,
+  });
+  const pinOptions = [...new Set((pinSearchQuery.data || []).map((pin) => pin.title).filter(Boolean))];
+  const userOptions = [...new Set((userSearchQuery.data || []).map((user) => user.username).filter(Boolean))];
+  const searchingPins = pinSearchQuery.isFetching;
+  const searchingUsers = userSearchQuery.isFetching;
 
   const formatDateForInput = (value) => {
     if (!value) return '';
@@ -91,56 +102,6 @@ const TripForm = () => {
       fetchTripDetails(id);
     }
   }, [id, tripDetails, fetchTripDetails]);
-
-  useEffect(() => {
-    if (pinSearch.trim().length < 2) {
-      setPinOptions([]);
-      return undefined;
-    }
-
-    let active = true;
-    const timer = setTimeout(async () => {
-      setSearchingPins(true);
-      try {
-        const pins = await pinService.searchPins(pinSearch.trim());
-        if (active) setPinOptions([...new Set(pins.map((pin) => pin.title).filter(Boolean))]);
-      } catch (err) {
-        if (active) setPinOptions([]);
-      } finally {
-        if (active) setSearchingPins(false);
-      }
-    }, 250);
-
-    return () => {
-      active = false;
-      clearTimeout(timer);
-    };
-  }, [pinSearch]);
-
-  useEffect(() => {
-    if (userSearch.trim().length < 2) {
-      setUserOptions([]);
-      return undefined;
-    }
-
-    let active = true;
-    const timer = setTimeout(async () => {
-      setSearchingUsers(true);
-      try {
-        const users = await usersService.searchUsers(userSearch.trim());
-        if (active) setUserOptions([...new Set(users.map((user) => user.username).filter(Boolean))]);
-      } catch (err) {
-        if (active) setUserOptions([]);
-      } finally {
-        if (active) setSearchingUsers(false);
-      }
-    }, 250);
-
-    return () => {
-      active = false;
-      clearTimeout(timer);
-    };
-  }, [userSearch]);
 
   // Update form when tripDetails changes
   useEffect(() => {

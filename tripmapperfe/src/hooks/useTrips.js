@@ -1,130 +1,194 @@
-import { useState, useEffect } from "react";
-import tripService from "../services/tripService";
+import { useEffect, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import tripService from '../services/tripService';
 import showError from '../modules/showError';
 import showStatus from '../modules/showStatus';
 
-const useTrips = () => {
-  const [tripDetails, setTripDetails] = useState(null);
-  const [tripAccess, setTripAccess] = useState(null);
-  const [trips, setTrips] = useState([]);
-  const [tripsCount, setTripsCount] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+const getErrorMessage = (error) => error?.response?.data?.message || error?.message || 'Request failed.';
 
-  if (error) {
-    showError(error);
-  }
+const useTrips = () => {
+  const queryClient = useQueryClient();
+  const [tripListArgs, setTripListArgs] = useState(null);
+  const [tripCountArgs, setTripCountArgs] = useState(null);
+  const [tripId, setTripId] = useState(null);
+  const [accessTripId, setAccessTripId] = useState(null);
+  const [actionError, setActionError] = useState(null);
+
+  const tripsQuery = useQuery({
+    queryKey: ['trips', tripListArgs],
+    queryFn: () => tripService.getAll(
+      tripListArgs.title,
+      tripListArgs.dateFrom,
+      tripListArgs.dateTo,
+      tripListArgs.page,
+      tripListArgs.pageSize
+    ),
+    enabled: tripListArgs !== null,
+  });
+
+  const tripsCountQuery = useQuery({
+    queryKey: ['trips-count', tripCountArgs],
+    queryFn: async () => {
+      const result = await tripService.getCount(
+        tripCountArgs.title,
+        tripCountArgs.dateFrom,
+        tripCountArgs.dateTo
+      );
+      return result.count || 0;
+    },
+    enabled: tripCountArgs !== null,
+  });
+
+  const tripDetailsQuery = useQuery({
+    queryKey: ['trip', tripId],
+    queryFn: () => tripService.getById(tripId),
+    enabled: tripId !== null,
+  });
+
+  const tripAccessQuery = useQuery({
+    queryKey: ['trip-access', accessTripId],
+    queryFn: () => tripService.getAccess(accessTripId),
+    enabled: accessTripId !== null,
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (tripData) => tripService.create(tripData),
+    onSuccess: (created) => {
+      if (queryClient.getQueryData(['trips', null]) === undefined) {
+        queryClient.setQueryData(['trips', null], [created]);
+      } else {
+        queryClient.setQueriesData({ queryKey: ['trips'] }, (current) => current ? [...current, created] : current);
+      }
+      queryClient.invalidateQueries({ queryKey: ['trips'], refetchType: 'none' });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, tripData }) => tripService.update(id, tripData),
+    onSuccess: (updated, variables) => {
+      queryClient.setQueryData(['trip', variables.id], updated);
+      queryClient.setQueryData(['trips', tripListArgs], (current) => current
+        ? current.map((trip) => (trip.id === variables.id ? updated : trip))
+        : current);
+      queryClient.setQueriesData({ queryKey: ['trips'] }, (current) => current
+        ? current.map((trip) => (trip.id === variables.id ? updated : trip))
+        : current);
+      queryClient.invalidateQueries({ queryKey: ['trips'], refetchType: 'none' });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: ({ id, rowVersion }) => tripService.delete(id, rowVersion),
+    onSuccess: (_, variables) => {
+      queryClient.removeQueries({ queryKey: ['trip', variables.id] });
+      queryClient.setQueryData(['trips', tripListArgs], (current) => current
+        ? current.filter((trip) => trip.id !== variables.id)
+        : current);
+      queryClient.setQueriesData({ queryKey: ['trips'] }, (current) => current
+        ? current.filter((trip) => trip.id !== variables.id)
+        : current);
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
+    },
+  });
+
+  const mutationError = createMutation.error || updateMutation.error || deleteMutation.error;
+  const queryError = tripsQuery.error || tripsCountQuery.error || tripDetailsQuery.error || tripAccessQuery.error;
+  const error = actionError || mutationError || queryError;
+  const errorMessage = error ? getErrorMessage(error) : null;
+
+  useEffect(() => {
+    if (errorMessage) showError(errorMessage);
+  }, [errorMessage]);
+
+  const fetchTrips = async (title, dateFrom, dateTo, page, pageSize) => {
+    setActionError(null);
+    const args = { title, dateFrom, dateTo, page, pageSize };
+    setTripListArgs(args);
+    try {
+      return await queryClient.fetchQuery({
+        queryKey: ['trips', args],
+        queryFn: () => tripService.getAll(title, dateFrom, dateTo, page, pageSize),
+      });
+    } catch (fetchError) {
+      setActionError(fetchError);
+      return [];
+    }
+  };
+
+  const fetchTripsCount = async (title, dateFrom, dateTo) => {
+    setActionError(null);
+    const args = { title, dateFrom, dateTo };
+    setTripCountArgs(args);
+    try {
+      return await queryClient.fetchQuery({
+        queryKey: ['trips-count', args],
+        queryFn: async () => (await tripService.getCount(title, dateFrom, dateTo)).count || 0,
+      });
+    } catch (fetchError) {
+      setActionError(fetchError);
+      return 0;
+    }
+  };
 
   const fetchTripDetails = async (id) => {
-    setLoading(true);
-    setError(null);
+    setActionError(null);
+    setTripId(id);
     try {
-      const trip = await tripService.getById(id);
-      setTripDetails(trip);
-      return trip;
-    } catch (err) {
-      const message = err.response?.data?.message || err.message || 'Unable to load trip.';
-      setTripDetails(null);
-      setError(message);
+      return await queryClient.fetchQuery({
+        queryKey: ['trip', id],
+        queryFn: () => tripService.getById(id),
+      });
+    } catch (fetchError) {
+      setActionError(fetchError);
       return null;
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchTripAccess = async (id) => {
-    setLoading(true);
-    setError(null);
+    setActionError(null);
+    setAccessTripId(id);
     try {
-      const access = await tripService.getAccess(id);
-      setTripAccess(access);
-      return access;
-    } catch (err) {
-      const message = err.response?.data?.message || err.message || 'Unable to load trip access.';
-      setTripAccess(null);
-      setError(message);
+      return await queryClient.fetchQuery({
+        queryKey: ['trip-access', id],
+        queryFn: () => tripService.getAccess(id),
+      });
+    } catch (fetchError) {
+      setActionError(fetchError);
       return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchTrips = async (title, dateFrom, dateVisited, page, pageSize) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await tripService.getAll(title, dateFrom, dateVisited, page, pageSize);
-      setTrips(data);
-    } catch (err) {
-      setError(err.response?.data?.message || err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchTripsCount = async (title, dateFrom, dateVisited) => {
-    try {
-      const data = await tripService.getCount(title, dateFrom, dateVisited);
-      setTripsCount(data.count || 0);
-    } catch (err) {
-      setError(err.response?.data?.message || err.message);
     }
   };
 
   const createTrip = async (tripData) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const newTrip = await tripService.create(tripData);
-      setTrips((prev) => [...prev, newTrip]);
-      showStatus('Trip created successfully');
-      return newTrip;
-    } catch (err) {
-      setError(err.response?.data?.message || err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
+    const created = await createMutation.mutateAsync(tripData);
+    showStatus('Trip created successfully');
+    return created;
   };
 
   const updateTrip = async (id, tripData) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const updated = await tripService.update(id, tripData);
-      setTrips((prev) => prev.map((trip) => (trip.id === id ? updated : trip)));
-      showStatus('Trip updated successfully');
-      return updated;
-    } catch (err) {
-      setError(err.response?.data?.message || err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
+    const updated = await updateMutation.mutateAsync({ id, tripData });
+    showStatus('Trip updated successfully');
+    return updated;
   };
 
   const deleteTrip = async (id, rowVersion) => {
-    setLoading(true);
-    setError(null);
-    try {
-      await tripService.delete(id, rowVersion);
-      setTrips((prev) => prev.filter((trip) => trip.id !== id));
-      showStatus('Trip deleted successfully');
-    } catch (err) {
-      setError(err.response?.data?.message || err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
+    await deleteMutation.mutateAsync({ id, rowVersion });
+    queryClient.setQueryData(['trips', tripListArgs], (current) => current
+      ? current.filter((trip) => trip.id !== id)
+      : current);
+    showStatus('Trip deleted successfully');
   };
 
   return {
-    trips,
-    tripsCount,
-    tripDetails,
-    tripAccess,
-    loading,
-    error,
+    trips: tripsQuery.data || [],
+    tripsCount: tripsCountQuery.data || 0,
+    tripDetails: tripDetailsQuery.data || null,
+    tripAccess: tripAccessQuery.data || null,
+    loading: (tripsQuery.isFetching && !tripsQuery.isError)
+      || (tripsCountQuery.isFetching && !tripsCountQuery.isError)
+      || (tripDetailsQuery.isFetching && !tripDetailsQuery.isError && !actionError)
+      || (tripAccessQuery.isFetching && !tripAccessQuery.isError && !actionError)
+      || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
+    error: errorMessage,
     fetchTrips,
     fetchTripsCount,
     fetchTripDetails,

@@ -1,82 +1,94 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import categoryService from '../services/categoryService';
 import showError from '../modules/showError';
 import showStatus from '../modules/showStatus';
 
-const useCategories = () => {
-  const [curCategory, setCurCategory] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+const getErrorMessage = (error) => error?.response?.data?.message || error?.message || 'Request failed.';
 
-  if (error) {
-    showError(error);
-  }
+const useCategories = () => {
+  const queryClient = useQueryClient();
+  const [categoriesEnabled, setCategoriesEnabled] = useState(false);
+  const [categoryId, setCategoryId] = useState(null);
+
+  const categoriesQuery = useQuery({
+    queryKey: ['categories'],
+    queryFn: categoryService.getAll,
+    enabled: categoriesEnabled,
+  });
+
+  const categoryQuery = useQuery({
+    queryKey: ['category', categoryId],
+    queryFn: () => categoryService.getById(categoryId),
+    enabled: categoryId !== null,
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (categoryData) => categoryService.create(categoryData),
+    onSuccess: (created) => {
+      const current = queryClient.getQueryData(['categories']);
+      queryClient.setQueryData(['categories'], current ? [...current, created] : [created]);
+      queryClient.invalidateQueries({ queryKey: ['categories'], refetchType: 'none' });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => categoryService.delete(id),
+    onSuccess: (_, deletedId) => {
+      queryClient.setQueryData(['categories'], (current) => current
+        ? current.filter((category) => category.id !== deletedId)
+        : current);
+      queryClient.invalidateQueries({ queryKey: ['categories'], refetchType: 'none' });
+    },
+  });
+
+  const error = createMutation.error || deleteMutation.error || categoriesQuery.error || categoryQuery.error;
+  const errorMessage = error ? getErrorMessage(error) : null;
+
+  useEffect(() => {
+    if (errorMessage) showError(errorMessage);
+  }, [errorMessage]);
 
   const fetchCategories = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await categoryService.getAll();
-      setCategories(data);
-    } catch (err) {
-      setError(err.response?.data?.message || err.message);
-    } finally {
-      setLoading(false);
-    }
+    setCategoriesEnabled(true);
+    return queryClient.fetchQuery({ queryKey: ['categories'], queryFn: categoryService.getAll });
   };
 
   const fetchCategoryById = async (id) => {
-    setLoading(true);
-    setError(null);
+    setCategoryId(id);
     try {
-      const data = await categoryService.getById(id);
-      setCurCategory(data);
-      return data;
-    } catch (err) {
-      setError(err.response?.data?.message || err.message);
-    } finally {
-      setLoading(false);
+      return await queryClient.fetchQuery({
+        queryKey: ['category', id],
+        queryFn: () => categoryService.getById(id),
+      });
+    } catch {
+      return null;
     }
   };
 
   const createCategory = async (categoryData) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const newCategory = await categoryService.create(categoryData);
-      setCategories((prev) => [...prev, newCategory]);
-      showStatus('Category created successfully');
-      return newCategory;
-    } catch (err) {
-      setError(err.response?.data?.message || err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
+    const created = await createMutation.mutateAsync(categoryData);
+    showStatus('Category created successfully');
+    return created;
   };
 
   const deleteCategory = async (id) => {
-    setLoading(true);
-    setError(null);
     try {
-      await categoryService.delete(id);
-      setCategories((prev) => prev.filter((cat) => cat.id !== id));
+      await deleteMutation.mutateAsync(id);
       showStatus('Category deleted successfully');
       return true;
-    } catch (err) {
-      setError(err.response?.data      ?.message || err.message);
+    } catch {
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 
   return {
-    categories,
-    curCategory,
-    loading,
-    error,
+    categories: categoriesQuery.data || [],
+    curCategory: categoryQuery.data || null,
+    loading: (categoriesQuery.isFetching && !categoriesQuery.isError)
+      || (categoryQuery.isFetching && !categoryQuery.isError)
+      || createMutation.isPending || deleteMutation.isPending,
+    error: errorMessage,
     fetchCategories,
     fetchCategoryById,
     createCategory,

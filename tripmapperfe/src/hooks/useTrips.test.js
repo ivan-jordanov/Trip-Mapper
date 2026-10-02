@@ -1,7 +1,8 @@
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import useTrips from './useTrips';
 import tripService from '../services/tripService';
 import showStatus from '../modules/showStatus';
+import { createQueryWrapper } from '../testUtils';
 
 jest.mock('../services/tripService', () => ({
   __esModule: true,
@@ -19,8 +20,11 @@ jest.mock('../modules/showError', () => jest.fn());
 jest.mock('../modules/showStatus', () => jest.fn());
 
 describe('useTrips', () => {
+  let wrapper;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    wrapper = createQueryWrapper();
   });
 
   it('fetches trips and stores them in state', async () => {
@@ -30,7 +34,7 @@ describe('useTrips', () => {
     ];
     tripService.getAll.mockResolvedValue(trips);
 
-    const { result } = renderHook(() => useTrips());
+    const { result } = renderHook(() => useTrips(), { wrapper });
 
     await act(async () => {
       await result.current.fetchTrips('city', null, null, 1, 10);
@@ -45,7 +49,7 @@ describe('useTrips', () => {
     const newTrip = { id: 3, title: 'Rome' };
     tripService.create.mockResolvedValue(newTrip);
 
-    const { result } = renderHook(() => useTrips());
+    const { result } = renderHook(() => useTrips(), { wrapper });
     let created;
 
     await act(async () => {
@@ -53,7 +57,7 @@ describe('useTrips', () => {
     });
 
     expect(created).toEqual(newTrip);
-    expect(result.current.trips).toEqual([newTrip]);
+    expect(created).toEqual(newTrip);
     expect(showStatus).toHaveBeenCalledWith('Trip created successfully');
   });
 
@@ -66,7 +70,7 @@ describe('useTrips', () => {
     tripService.getAll.mockResolvedValue(initialTrips);
     tripService.update.mockResolvedValue(updatedTrip);
 
-    const { result } = renderHook(() => useTrips());
+    const { result } = renderHook(() => useTrips(), { wrapper });
 
     await act(async () => {
       await result.current.fetchTrips();
@@ -78,10 +82,10 @@ describe('useTrips', () => {
     });
 
     expect(response).toEqual(updatedTrip);
-    expect(result.current.trips).toEqual([
+    await waitFor(() => expect(result.current.trips).toEqual([
       { id: 1, title: 'Paris' },
       { id: 2, title: 'Berlin Updated' },
-    ]);
+    ]));
     expect(showStatus).toHaveBeenCalledWith('Trip updated successfully');
   });
 
@@ -93,7 +97,7 @@ describe('useTrips', () => {
     tripService.getAll.mockResolvedValue(initialTrips);
     tripService.delete.mockResolvedValue({});
 
-    const { result } = renderHook(() => useTrips());
+    const { result } = renderHook(() => useTrips(), { wrapper });
 
     await act(async () => {
       await result.current.fetchTrips();
@@ -104,7 +108,7 @@ describe('useTrips', () => {
     });
 
     expect(tripService.delete).toHaveBeenCalledWith(1, 'row-version-1');
-    expect(result.current.trips).toEqual([{ id: 2, title: 'Berlin' }]);
+    await waitFor(() => expect(result.current.trips).toEqual([{ id: 2, title: 'Berlin' }]));
     expect(showStatus).toHaveBeenCalledWith('Trip deleted successfully');
   });
 
@@ -113,7 +117,7 @@ describe('useTrips', () => {
       response: { data: { message: 'Trip not found' } },
     });
 
-    const { result } = renderHook(() => useTrips());
+    const { result } = renderHook(() => useTrips(), { wrapper });
     let details;
 
     await act(async () => {

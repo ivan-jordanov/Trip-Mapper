@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { MapContainer, TileLayer, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Box, Button } from '@mantine/core';
@@ -49,7 +50,12 @@ const Recenter = ({ viewCenter, zoom }) => {
 };
 
 const MapView = ({ initialCenter = [51.5074, -0.1278], initialZoom = 13, pins, previewMarker, onMapClick }) => {
-  const [CARTO_MAP_API_KEY, setCartoMapApiKey] = useState('');
+  const mapKeyQuery = useQuery({
+    queryKey: ['map-api-key'],
+    queryFn: configService.getMapApiKey,
+    staleTime: Infinity,
+  });
+  const CARTO_MAP_API_KEY = mapKeyQuery.data || '';
   const mapRef = useRef(null);
   // viewCenter: controls the map's visible center (initial geolocation only)
   const [viewCenter, setViewCenter] = useState(initialCenter);
@@ -61,12 +67,6 @@ const MapView = ({ initialCenter = [51.5074, -0.1278], initialZoom = 13, pins, p
 
   // Fetch pins from backend
   const { pins: backendPins, loading, fetchPins } = usePins();
-
-  useEffect(() => {
-    configService.getMapApiKey()
-      .then(setCartoMapApiKey)
-      .catch((err) => showError(err.response?.data?.message || err.message || 'Unable to load map configuration.'));
-  }, []);
 
   const hasProvidedPins = Array.isArray(pins);
 

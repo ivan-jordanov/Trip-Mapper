@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ActionIcon,
   Badge,
@@ -19,68 +20,46 @@ import showStatus from '../../modules/showStatus';
 const TripAccessPanel = ({ tripId, isOwner = false, currentUserId, selectedUsernames = [], onSelectedUsernamesChange }) => {
   const isCreateMode = !tripId;
   const canManage = isCreateMode || isOwner;
-  const [collaborators, setCollaborators] = useState([]);
   const [username, setUsername] = useState('');
+  const [searchText, setSearchText] = useState('');
   const [accessLevel, setAccessLevel] = useState('View');
-  const [userOptions, setUserOptions] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [searching, setSearching] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  useEffect(() => {
-    if (isCreateMode) return;
-
-    const fetchCollaborators = async () => {
-      setLoading(true);
-      try {
-        setCollaborators(await tripService.getCollaborators(tripId));
-      } catch (err) {
-        showError(err.response?.data?.message || err.message || 'Unable to load trip collaborators.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCollaborators();
-  }, [isCreateMode, tripId]);
-
-  useEffect(() => {
-    if (username.trim().length < 2) {
-      setUserOptions([]);
-      return undefined;
-    }
-
-    let active = true;
-    const timer = setTimeout(async () => {
-      setSearching(true);
-      try {
-        const users = await usersService.searchUsers(username.trim());
-        if (active) setUserOptions(users.map((user) => user.username));
-      } catch (err) {
-        if (active) showError(err.response?.data?.message || err.message || 'Unable to search users.');
-      } finally {
-        if (active) setSearching(false);
-      }
-    }, 250);
-
-    return () => {
-      active = false;
-      clearTimeout(timer);
-    };
-  }, [username]);
+  const queryClient = useQueryClient();
+  const collaboratorsQuery = useQuery({
+    queryKey: ['collaborators', tripId],
+    queryFn: () => tripService.getCollaborators(tripId),
+    enabled: !isCreateMode,
+  });
+  const userSearchQuery = useQuery({
+    queryKey: ['user-search', searchText.trim()],
+    queryFn: () => usersService.searchUsers(searchText.trim()),
+    enabled: searchText.trim().length >= 2,
+  });
+  const collaborators = collaboratorsQuery.data || [];
+  const userOptions = (userSearchQuery.data || []).map((user) => user.username);
+  const loading = collaboratorsQuery.isFetching;
+  const searching = userSearchQuery.isFetching;
+  const grantMutation = useMutation({
+    mutationFn: ({ targetUsername, access }) => tripService.grantAccess(tripId, targetUsername, access),
+    onSuccess: (granted) => queryClient.setQueryData(['collaborators', tripId], (current) => [...(current || []), granted]),
+  });
+  const revokeMutation = useMutation({
+    mutationFn: (userId) => tripService.revokeAccess(tripId, userId),
+    onSuccess: (_, userId) => queryClient.setQueryData(['collaborators', tripId], (current) =>
+      (current || []).filter((collaborator) => collaborator.userId !== userId)),
+  });
+  const leaveMutation = useMutation({ mutationFn: () => tripService.leaveTrip(tripId) });
+  const submitting = grantMutation.isPending;
 
   const handleGrant = async () => {
     if (!username.trim()) return;
 
-    setSubmitting(true);
     try {
-      const granted = await tripService.grantAccess(tripId, username.trim(), accessLevel);
-      setCollaborators((current) => [...current, granted]);
+      await grantMutation.mutateAsync({ targetUsername: username.trim(), access: accessLevel });
       setUsername('');
+      setSearchText('');
       showStatus('Trip access granted');
     } catch (err) {
       showError(err.response?.data?.message || err.message || 'Unable to grant trip access.');
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -89,17 +68,17 @@ const TripAccessPanel = ({ tripId, isOwner = false, currentUserId, selectedUsern
       onSelectedUsernamesChange([...selectedUsernames, value]);
     }
     setUsername('');
+    setSearchText('');
   };
 
   const handleGrantUserOption = (value) => {
     setUsername(value);
-    setUserOptions([]);
+    setSearchText('');
   };
 
   const handleRevoke = async (userId) => {
     try {
-      await tripService.revokeAccess(tripId, userId);
-      setCollaborators((current) => current.filter((collaborator) => collaborator.userId !== userId));
+      await revokeMutation.mutateAsync(userId);
       showStatus('Trip access revoked');
     } catch (err) {
       showError(err.response?.data?.message || err.message || 'Unable to revoke trip access.');
@@ -108,7 +87,7 @@ const TripAccessPanel = ({ tripId, isOwner = false, currentUserId, selectedUsern
 
   const handleLeave = async () => {
     try {
-      await tripService.leaveTrip(tripId);
+      await leaveMutation.mutateAsync();
       showStatus('You left the trip');
       window.location.href = '/trips';
     } catch (err) {
@@ -150,7 +129,11 @@ const TripAccessPanel = ({ tripId, isOwner = false, currentUserId, selectedUsern
                 label="Share with users"
                 placeholder="Search by username"
                 value={username}
-                onChange={(event) => setUsername(event.currentTarget.value)}
+                onChange={(event) => {
+                  const value = event.currentTarget.value;
+                  setUsername(value);
+                  setSearchText(value);
+                }}
                 rightSection={searching ? <Loader size="xs" /> : null}
               />
               {userOptions.length > 0 && (
@@ -200,7 +183,11 @@ const TripAccessPanel = ({ tripId, isOwner = false, currentUserId, selectedUsern
                 label="Add collaborator"
                 placeholder="Search by username"
                 value={username}
-                onChange={(event) => setUsername(event.currentTarget.value)}
+                onChange={(event) => {
+                  const value = event.currentTarget.value;
+                  setUsername(value);
+                  setSearchText(value);
+                }}
                 rightSection={searching ? <Loader size="xs" /> : null}
               />
               {userOptions.length > 0 && (

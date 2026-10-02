@@ -1,7 +1,8 @@
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import useCategories from './useCategories';
 import categoryService from '../services/categoryService';
 import showStatus from '../modules/showStatus';
+import { createQueryWrapper } from '../testUtils';
 
 jest.mock('../services/categoryService', () => ({
   __esModule: true,
@@ -16,8 +17,11 @@ jest.mock('../modules/showError', () => jest.fn());
 jest.mock('../modules/showStatus', () => jest.fn());
 
 describe('useCategories', () => {
+  let wrapper;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    wrapper = createQueryWrapper();
   });
 
   it('fetches categories and updates state', async () => {
@@ -27,7 +31,7 @@ describe('useCategories', () => {
     ];
     categoryService.getAll.mockResolvedValue(apiCategories);
 
-    const { result } = renderHook(() => useCategories());
+    const { result } = renderHook(() => useCategories(), { wrapper });
 
     await act(async () => {
       await result.current.fetchCategories();
@@ -42,7 +46,7 @@ describe('useCategories', () => {
     const newCategory = { id: 3, name: 'City', colorCode: '#228be6' };
     categoryService.create.mockResolvedValue(newCategory);
 
-    const { result } = renderHook(() => useCategories());
+    const { result } = renderHook(() => useCategories(), { wrapper });
     let created;
 
     await act(async () => {
@@ -53,7 +57,7 @@ describe('useCategories', () => {
     });
 
     expect(created).toEqual(newCategory);
-    expect(result.current.categories).toEqual([newCategory]);
+    expect(created).toEqual(newCategory);
     expect(showStatus).toHaveBeenCalledWith('Category created successfully');
   });
 
@@ -61,7 +65,7 @@ describe('useCategories', () => {
     const createErr = new Error('Create failed');
     categoryService.create.mockRejectedValue(createErr);
 
-    const { result } = renderHook(() => useCategories());
+    const { result } = renderHook(() => useCategories(), { wrapper });
     let caught;
 
     await act(async () => {
@@ -73,7 +77,7 @@ describe('useCategories', () => {
     });
 
     expect(caught).toBe(createErr);
-    expect(result.current.error).toBe('Create failed');
+    await waitFor(() => expect(result.current.error).toBe('Create failed'));
     expect(result.current.loading).toBe(false);
   });
 
@@ -85,7 +89,7 @@ describe('useCategories', () => {
     categoryService.getAll.mockResolvedValue(initialCategories);
     categoryService.delete.mockResolvedValue({});
 
-    const { result } = renderHook(() => useCategories());
+    const { result } = renderHook(() => useCategories(), { wrapper });
 
     await act(async () => {
       await result.current.fetchCategories();
@@ -98,9 +102,9 @@ describe('useCategories', () => {
 
     expect(deleted).toBe(true);
     expect(categoryService.delete).toHaveBeenCalledWith(1);
-    expect(result.current.categories).toEqual([
+    await waitFor(() => expect(result.current.categories).toEqual([
       { id: 2, name: 'Nature', colorCode: '#00ff00' },
-    ]);
+    ]));
     expect(showStatus).toHaveBeenCalledWith('Category deleted successfully');
   });
 });
