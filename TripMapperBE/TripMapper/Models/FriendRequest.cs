@@ -6,8 +6,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace TripMapperDB.Models
 {
+    public enum FriendRequestStatus
+    {
+        Pending,
+        Accepted,
+        Declined
+    }
+    
     [Table("FriendRequest")]
     public partial class FriendRequest
     {

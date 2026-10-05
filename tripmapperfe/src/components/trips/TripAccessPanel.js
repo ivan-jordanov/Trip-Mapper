@@ -16,7 +16,7 @@ import showError from '../../modules/showError';
 import showStatus from '../../modules/showStatus';
 import { usePresence } from '../../context/PresenceContext';
 import useTripCollaborators from '../../hooks/useTripCollaborators';
-import useUserSearch from '../../hooks/useUserSearch';
+import useFriends from '../../hooks/useFriends';
 
 const TripAccessPanel = ({ tripId, isOwner = false, currentUserId, selectedUsernames = [], onSelectedUsernamesChange }) => {
   const isCreateMode = !tripId;
@@ -26,8 +26,10 @@ const TripAccessPanel = ({ tripId, isOwner = false, currentUserId, selectedUsern
   const [searchText, setSearchText] = useState('');
   const [accessLevel, setAccessLevel] = useState('View');
   const { collaborators, loading, grant, revoke, leave, granting: submitting } = useTripCollaborators(isCreateMode ? null : tripId);
-  const { users: searchedUsers, loading: searching } = useUserSearch(searchText);
-  const userOptions = searchedUsers.map((user) => user.username);
+  const { friends, loading: friendsLoading } = useFriends();
+  const userOptions = friends
+    .filter((friend) => !searchText.trim() || friend.username.toLowerCase().includes(searchText.trim().toLowerCase()))
+    .map((friend) => friend.username);
 
   const handleGrant = async () => {
     if (!username.trim()) return;
@@ -124,7 +126,7 @@ const TripAccessPanel = ({ tripId, isOwner = false, currentUserId, selectedUsern
                   setUsername(value);
                   setSearchText(value);
                 }}
-                rightSection={searching ? <Loader size="xs" /> : null}
+                rightSection={friendsLoading ? <Loader size="xs" /> : null}
               />
               {userOptions.length > 0 && (
                 <Stack gap={4}>
@@ -178,7 +180,7 @@ const TripAccessPanel = ({ tripId, isOwner = false, currentUserId, selectedUsern
                   setUsername(value);
                   setSearchText(value);
                 }}
-                rightSection={searching ? <Loader size="xs" /> : null}
+                rightSection={friendsLoading ? <Loader size="xs" /> : null}
               />
               {userOptions.length > 0 && (
                 <Stack gap={4}>

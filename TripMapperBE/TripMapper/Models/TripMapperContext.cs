@@ -96,6 +96,8 @@ public partial class TripMapperContext : DbContext
 
         modelBuilder.Entity<FriendRequest>(entity =>
         {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
             // Stores enum values as strings in the database column
             entity.Property(e => e.Status)
                   .HasConversion<string>()
@@ -112,6 +114,8 @@ public partial class TripMapperContext : DbContext
                   .WithMany(p => p.ReceivedFriendRequests)
                   .HasForeignKey(d => d.AddresseeId)
                   .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => new { e.RequesterId, e.AddresseeId });
         });
 
         OnModelCreatingPartial(modelBuilder);

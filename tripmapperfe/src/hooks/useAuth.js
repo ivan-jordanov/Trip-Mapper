@@ -76,6 +76,8 @@ const useAuth = () => {
     setUserOverride(undefined);
     const response = await loginMutation.mutateAsync({ username, password });
     queryClient.removeQueries({ queryKey: ['current-user'], exact: true });
+    queryClient.removeQueries({ queryKey: ['friends'] });
+    queryClient.removeQueries({ queryKey: ['friend-requests'] });
     await fetchUser();
     showStatus('Login successful');
     return response;
@@ -96,6 +98,8 @@ const useAuth = () => {
     await authService.logout();
     setLoggedOut(true);
     queryClient.setQueryData(['current-user'], null);
+    queryClient.removeQueries({ queryKey: ['friends'] });
+    queryClient.removeQueries({ queryKey: ['friend-requests'] });
     showStatus('Logged out successfully');
   };
 

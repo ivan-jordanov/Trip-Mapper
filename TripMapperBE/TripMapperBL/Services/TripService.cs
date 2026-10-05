@@ -81,6 +81,10 @@ namespace TripMapperBL.Services
             if (user == null) throw new KeyNotFoundException("User not found.");
             if (user.Id == ownerUserId) throw new ArgumentException("The owner already has access to this trip.");
 
+            var friendship = await _uow.Friends.GetRelationshipAsync(ownerUserId, user.Id);
+            if (friendship?.Status != FriendRequestStatus.Accepted)
+                throw new ArgumentException("Trip collaborators must be your friends.");
+
             var existing = await _uow.TripAccess.GetAccessAsync(tripId, user.Id);
             if (existing != null) throw new ArgumentException("This user already has access to the trip.");
 
@@ -184,6 +188,10 @@ namespace TripMapperBL.Services
                 {
                     var user = await _uow.Users.GetByUsernameAsync(username);
                     if (user == null || user.Id == currentUserId) continue;
+
+                    var friendship = await _uow.Friends.GetRelationshipAsync(currentUserId, user.Id);
+                    if (friendship?.Status != FriendRequestStatus.Accepted)
+                        throw new ArgumentException("Trip collaborators must be your friends.");
 
                     await _uow.TripAccess.AddAsync(new TripAccess
                     {

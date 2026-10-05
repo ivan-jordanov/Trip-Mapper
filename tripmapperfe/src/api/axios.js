@@ -34,8 +34,9 @@ axiosInstance.interceptors.response.use(
     const requestUrl = error.config?.url?.toLowerCase() || '';
     const isAuthLoginOrRegister =
       requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register');
+    const isLoginPage = window.location.pathname.toLowerCase() === '/login';
 
-    if (error.response?.status === 401 && !isAuthLoginOrRegister) {
+    if (error.response?.status === 401 && !isAuthLoginOrRegister && !isLoginPage) {
       // Handle unauthorized
       localStorage.removeItem('token');
       window.location.href = '/login';

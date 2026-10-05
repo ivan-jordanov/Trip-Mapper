@@ -114,6 +114,17 @@ describe('axios instance interceptors', () => {
     expect(window.location.href).toBe('http://localhost/');
   });
 
+  it('does not reload the login page when a stale session request returns 401', async () => {
+    localStorage.setItem('token', 'abc123');
+    window.location.pathname = '/login';
+    const error = { response: { status: 401 }, config: { url: '/Users/me' } };
+
+    await expect(responseErrorHandler(error)).rejects.toBe(error);
+
+    expect(localStorage.getItem('token')).toBeNull();
+    expect(window.location.href).toBe('http://localhost/');
+  });
+
   it('does not redirect on 401 from register endpoint', async () => {
     localStorage.setItem('token', 'abc123');
     const error = { response: { status: 401 }, config: { url: '/Auth/register' } };

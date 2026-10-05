@@ -14,6 +14,7 @@ namespace TripMapperDAL.Interfaces
         IUserRepository Users { get; }
         ICategoryRepository Categories { get; }
         ITripAccessRepository TripAccess{ get; }
+        IFriendRepository Friends { get; }
         Task<bool> CompleteAsync();
         bool HasChanges();
         void ClearTracking();

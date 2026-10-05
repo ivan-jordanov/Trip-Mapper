@@ -55,6 +55,7 @@ namespace TripMapper
             builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ITripAccessRepository, TripAccessRepository>();
+            builder.Services.AddScoped<IFriendRepository, FriendRepository>();
             builder.Services.AddSingleton<PresenceTracker>();
             builder.Services.AddSingleton<IUserIdProvider, PresenceUserIdProvider>();
 
@@ -75,6 +76,7 @@ namespace TripMapper
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IPhotoService, PhotoService>();
             builder.Services.AddScoped<ICategoryService, CategoryService>();
+            builder.Services.AddScoped<IFriendService, FriendService>();
 
             // API Services
             builder.Services.AddScoped<PhotoUploadService>();

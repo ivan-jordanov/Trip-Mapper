@@ -17,6 +17,7 @@ namespace TripMapperDAL.Repositories
         public IUserRepository Users { get; }
         public ICategoryRepository Categories { get; }
         public ITripAccessRepository TripAccess { get; }
+        public IFriendRepository Friends { get; }
 
         public UnitOfWork(TripMapperContext context,
                           IPinRepository pinRepo,
@@ -24,7 +25,8 @@ namespace TripMapperDAL.Repositories
                           IPhotoRepository photoRepo,
                           IUserRepository userRepo,
                           ICategoryRepository catRepo,
-                          ITripAccessRepository tripAccess)
+                          ITripAccessRepository tripAccess,
+                          IFriendRepository friendRepo)
         {
             _context = context;
             Pins = pinRepo;
@@ -33,6 +35,7 @@ namespace TripMapperDAL.Repositories
             Users = userRepo;
             Categories = catRepo;
             TripAccess = tripAccess;
+            Friends = friendRepo;
         }
 
         public async Task<bool> CompleteAsync()

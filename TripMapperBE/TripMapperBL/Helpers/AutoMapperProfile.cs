@@ -15,6 +15,14 @@ namespace TripMapperBL.Helpers
 
             CreateMap<User, UserDto>();
 
+            
+
+            CreateMap<FriendRequest, FriendRequestDto>()
+                .ForMember(d => d.RequesterUsername, opt => opt.MapFrom(s => s.Requester.Username))
+                .ForMember(d => d.RequesterKnownAs, opt => opt.MapFrom(s => s.Requester.KnownAs))
+                .ForMember(d => d.AddresseeUsername, opt => opt.MapFrom(s => s.Addressee.Username))
+                .ForMember(d => d.AddresseeKnownAs, opt => opt.MapFrom(s => s.Addressee.KnownAs));
+
             CreateMap<Category, CategoryDto>();
             CreateMap<CreateCategoryDto, Category>();
 
