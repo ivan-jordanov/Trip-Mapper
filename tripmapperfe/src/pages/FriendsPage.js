@@ -38,6 +38,7 @@ const FriendsPage = () => {
 
   return (
     <Stack gap="lg">
+        
       <Title order={3}>Friends</Title>
       <AddFriendForm
         loading={sending}

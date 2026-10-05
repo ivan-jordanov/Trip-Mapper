@@ -68,8 +68,4 @@ namespace TripMapper.Controllers
         }
     }
 
-    public class AddFriendDto
-    {
-        public string Username { get; set; } = string.Empty;
-    }
 }

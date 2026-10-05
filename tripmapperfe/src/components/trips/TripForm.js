@@ -7,7 +7,7 @@ import useTrips from '../../hooks/useTrips';
 import { useNavigate } from 'react-router-dom';
 import TripAccessPanel from './TripAccessPanel';
 import usePinSearch from '../../hooks/usePinSearch';
-import useUserSearch from '../../hooks/useUserSearch';
+import useFriendSearch from '../../hooks/useFriendSearch';
 
 const TripForm = () => {
   const { id } = useParams();
@@ -32,9 +32,9 @@ const TripForm = () => {
   const [selectedSharedUsernames, setSelectedSharedUsernames] = useState([]);
   const [userSearch, setUserSearch] = useState('');
   const { pins: searchedPins, loading: searchingPins } = usePinSearch(pinSearch);
-  const { users: searchedUsers, loading: searchingUsers } = useUserSearch(userSearch);
+  const { friends: searchedFriends, loading: searchingFriends } = useFriendSearch(userSearch);
   const pinOptions = [...new Set(searchedPins.map((pin) => pin.title).filter(Boolean))];
-  const userOptions = [...new Set(searchedUsers.map((user) => user.username).filter(Boolean))];
+  const userOptions = [...new Set(searchedFriends.map((friend) => friend.username).filter(Boolean))];
 
   const formatDateForInput = (value) => {
     if (!value) return '';
@@ -406,7 +406,7 @@ const TripForm = () => {
                     description="Select users who should have access to this trip"
                     value={userSearch}
                     onChange={(event) => setUserSearch(event.currentTarget.value)}
-                    rightSection={searchingUsers ? <Loader size="xs" /> : null}
+                    rightSection={searchingFriends ? <Loader size="xs" /> : null}
                   />
                   {userOptions.length > 0 && (
                     <Stack gap={4}>

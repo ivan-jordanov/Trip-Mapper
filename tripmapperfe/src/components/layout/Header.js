@@ -99,7 +99,8 @@ const Header = () => {
         
 
         <Group spacing="xs" align="center" style={{ marginLeft: "auto" }}>
-          {isAuthenticated && (
+          {small && (
+            isAuthenticated ? (
             <ActionIcon
               variant="subtle"
               color="green"
@@ -109,7 +110,8 @@ const Header = () => {
             >
               <IconUsers size={19} />
             </ActionIcon>
-          )}
+          ) : null
+        )}
           {!small && (
             isAuthenticated ? (
               <>
@@ -157,9 +159,10 @@ const Header = () => {
       <Drawer
         opened={friendsOpened}
         onClose={() => setFriendsOpened(false)}
-        title="Friends"
+        title="Friends Management"
         position="right"
         size={small ? '100%' : 420}
+        overlayProps={!small ? { backgroundOpacity: 0.5, blur: 4 } : null}
         zIndex={2000}
         keepMounted
       >

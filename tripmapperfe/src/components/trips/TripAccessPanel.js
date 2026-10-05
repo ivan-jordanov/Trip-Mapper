@@ -16,7 +16,7 @@ import showError from '../../modules/showError';
 import showStatus from '../../modules/showStatus';
 import { usePresence } from '../../context/PresenceContext';
 import useTripCollaborators from '../../hooks/useTripCollaborators';
-import useFriends from '../../hooks/useFriends';
+import useFriendSearch from '../../hooks/useFriendSearch';
 
 const TripAccessPanel = ({ tripId, isOwner = false, currentUserId, selectedUsernames = [], onSelectedUsernamesChange }) => {
   const isCreateMode = !tripId;
@@ -26,10 +26,8 @@ const TripAccessPanel = ({ tripId, isOwner = false, currentUserId, selectedUsern
   const [searchText, setSearchText] = useState('');
   const [accessLevel, setAccessLevel] = useState('View');
   const { collaborators, loading, grant, revoke, leave, granting: submitting } = useTripCollaborators(isCreateMode ? null : tripId);
-  const { friends, loading: friendsLoading } = useFriends();
-  const userOptions = friends
-    .filter((friend) => !searchText.trim() || friend.username.toLowerCase().includes(searchText.trim().toLowerCase()))
-    .map((friend) => friend.username);
+  const { friends: searchedFriends, loading: friendsLoading } = useFriendSearch(searchText);
+  const userOptions = searchedFriends.map((friend) => friend.username);
 
   const handleGrant = async () => {
     if (!username.trim()) return;
@@ -114,7 +112,7 @@ const TripAccessPanel = ({ tripId, isOwner = false, currentUserId, selectedUsern
       )))}
 
       {canManage && (
-        <Group align="flex-end">
+        <Group align="flex-start">
           {isCreateMode ? (
             <Stack gap="xs" style={{ flex: 1 }}>
               <TextInput
@@ -208,7 +206,7 @@ const TripAccessPanel = ({ tripId, isOwner = false, currentUserId, selectedUsern
                 onChange={setAccessLevel}
                 w={110}
               />
-              <Button loading={submitting} onClick={handleGrant}>Add</Button>
+              <Button mt={26} loading={submitting} onClick={handleGrant}>Add</Button>
             </>
           )}
         </Group>
