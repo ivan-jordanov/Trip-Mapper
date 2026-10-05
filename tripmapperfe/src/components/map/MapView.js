@@ -1,12 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { MapContainer, TileLayer, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Box, Button } from '@mantine/core';
 import MapMarker from './MapMarker';
 import usePins from '../../hooks/usePins'; 
 import showError from '../../modules/showError';
-import configService from '../../services/configService';
+import useMapApiKey from '../../hooks/useMapApiKey';
 
 // fix marker icon paths for CRA and bundlers
 delete L.Icon.Default.prototype._getIconUrl;
@@ -50,12 +49,7 @@ const Recenter = ({ viewCenter, zoom }) => {
 };
 
 const MapView = ({ initialCenter = [51.5074, -0.1278], initialZoom = 13, pins, previewMarker, onMapClick }) => {
-  const mapKeyQuery = useQuery({
-    queryKey: ['map-api-key'],
-    queryFn: configService.getMapApiKey,
-    staleTime: Infinity,
-  });
-  const CARTO_MAP_API_KEY = mapKeyQuery.data || '';
+  const { apiKey: CARTO_MAP_API_KEY } = useMapApiKey();
   const mapRef = useRef(null);
   // viewCenter: controls the map's visible center (initial geolocation only)
   const [viewCenter, setViewCenter] = useState(initialCenter);

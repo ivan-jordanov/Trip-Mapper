@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { ActionIcon, Badge, Button, Flex, Group, TextInput, Textarea, Stack, Card, Title, FileInput, Image, Text, SimpleGrid, Loader } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconUpload, IconX } from '@tabler/icons-react';
@@ -7,8 +6,8 @@ import { useParams } from 'react-router-dom';
 import useTrips from '../../hooks/useTrips';
 import { useNavigate } from 'react-router-dom';
 import TripAccessPanel from './TripAccessPanel';
-import pinService from '../../services/pinService';
-import usersService from '../../services/usersService';
+import usePinSearch from '../../hooks/usePinSearch';
+import useUserSearch from '../../hooks/useUserSearch';
 
 const TripForm = () => {
   const { id } = useParams();
@@ -32,20 +31,10 @@ const TripForm = () => {
   const [pinSearch, setPinSearch] = useState('');
   const [selectedSharedUsernames, setSelectedSharedUsernames] = useState([]);
   const [userSearch, setUserSearch] = useState('');
-  const pinSearchQuery = useQuery({
-    queryKey: ['pin-search', pinSearch.trim()],
-    queryFn: () => pinService.searchPins(pinSearch.trim()),
-    enabled: pinSearch.trim().length >= 2,
-  });
-  const userSearchQuery = useQuery({
-    queryKey: ['user-search', userSearch.trim()],
-    queryFn: () => usersService.searchUsers(userSearch.trim()),
-    enabled: userSearch.trim().length >= 2,
-  });
-  const pinOptions = [...new Set((pinSearchQuery.data || []).map((pin) => pin.title).filter(Boolean))];
-  const userOptions = [...new Set((userSearchQuery.data || []).map((user) => user.username).filter(Boolean))];
-  const searchingPins = pinSearchQuery.isFetching;
-  const searchingUsers = userSearchQuery.isFetching;
+  const { pins: searchedPins, loading: searchingPins } = usePinSearch(pinSearch);
+  const { users: searchedUsers, loading: searchingUsers } = useUserSearch(userSearch);
+  const pinOptions = [...new Set(searchedPins.map((pin) => pin.title).filter(Boolean))];
+  const userOptions = [...new Set(searchedUsers.map((user) => user.username).filter(Boolean))];
 
   const formatDateForInput = (value) => {
     if (!value) return '';

@@ -5,6 +5,7 @@ import showError from '../modules/showError';
 import showStatus from '../modules/showStatus';
 
 const getErrorMessage = (error) => error?.response?.data?.message || error?.message || 'Request failed.';
+const EMPTY_TRIPS = [];
 
 const useTrips = () => {
   const queryClient = useQueryClient();
@@ -14,6 +15,7 @@ const useTrips = () => {
   const [accessTripId, setAccessTripId] = useState(null);
   const [actionError, setActionError] = useState(null);
 
+  // Filter and pagination arguments belong in the key so each result is cached separately.
   const tripsQuery = useQuery({
     queryKey: ['trips', tripListArgs],
     queryFn: () => tripService.getAll(
@@ -179,7 +181,7 @@ const useTrips = () => {
   };
 
   return {
-    trips: tripsQuery.data || [],
+    trips: tripsQuery.data ?? EMPTY_TRIPS,
     tripsCount: tripsCountQuery.data || 0,
     tripDetails: tripDetailsQuery.data || null,
     tripAccess: tripAccessQuery.data || null,

@@ -18,6 +18,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import PinDetail from './components/pins/PinDetail';
 import PinForm from './components/pins/PinForm';
+import PresenceProvider from './context/PresenceContext';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         styles={{ root: { minHeight: '100vh' }, main: { display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1, paddingTop: 60 } }}
       >
         <AuthProvider>
+          <PresenceProvider>
           <AppShell.Header height={60}>
             <Header />
           </AppShell.Header>
@@ -51,6 +53,7 @@ function App() {
           <AppShell.Footer>
             <Footer />
           </AppShell.Footer>
+          </PresenceProvider>
         </AuthProvider>
 
       </AppShell>

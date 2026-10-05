@@ -28,6 +28,16 @@ namespace TripMapperDAL.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<int>> GetCollaboratorUserIdsAsync(int userId)
+        {
+            return await _context.TripAccesses
+                .Where(access => access.UserId != userId
+                    && access.Trip.TripAccesses.Any(tripAccess => tripAccess.UserId == userId))
+                .Select(access => access.UserId)
+                .Distinct()
+                .ToListAsync();
+        }
+
         public async Task<bool> DeleteAsync(int tripId, int userId)
         {
             var access = await _context.TripAccesses

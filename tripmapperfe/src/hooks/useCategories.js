@@ -5,6 +5,7 @@ import showError from '../modules/showError';
 import showStatus from '../modules/showStatus';
 
 const getErrorMessage = (error) => error?.response?.data?.message || error?.message || 'Request failed.';
+const EMPTY_CATEGORIES = [];
 
 const useCategories = () => {
   const queryClient = useQueryClient();
@@ -83,7 +84,7 @@ const useCategories = () => {
   };
 
   return {
-    categories: categoriesQuery.data || [],
+    categories: categoriesQuery.data ?? EMPTY_CATEGORIES,
     curCategory: categoryQuery.data || null,
     loading: (categoriesQuery.isFetching && !categoriesQuery.isError)
       || (categoryQuery.isFetching && !categoryQuery.isError)

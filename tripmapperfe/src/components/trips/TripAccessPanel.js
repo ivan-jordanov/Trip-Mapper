@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ActionIcon,
   Badge,
+  Box,
   Button,
   Group,
   Loader,
@@ -12,49 +12,28 @@ import {
   TextInput,
 } from '@mantine/core';
 import { IconLogout, IconUserMinus, IconX } from '@tabler/icons-react';
-import tripService from '../../services/tripService';
-import usersService from '../../services/usersService';
 import showError from '../../modules/showError';
 import showStatus from '../../modules/showStatus';
+import { usePresence } from '../../context/PresenceContext';
+import useTripCollaborators from '../../hooks/useTripCollaborators';
+import useUserSearch from '../../hooks/useUserSearch';
 
 const TripAccessPanel = ({ tripId, isOwner = false, currentUserId, selectedUsernames = [], onSelectedUsernamesChange }) => {
   const isCreateMode = !tripId;
   const canManage = isCreateMode || isOwner;
+  const { isOnline } = usePresence();
   const [username, setUsername] = useState('');
   const [searchText, setSearchText] = useState('');
   const [accessLevel, setAccessLevel] = useState('View');
-  const queryClient = useQueryClient();
-  const collaboratorsQuery = useQuery({
-    queryKey: ['collaborators', tripId],
-    queryFn: () => tripService.getCollaborators(tripId),
-    enabled: !isCreateMode,
-  });
-  const userSearchQuery = useQuery({
-    queryKey: ['user-search', searchText.trim()],
-    queryFn: () => usersService.searchUsers(searchText.trim()),
-    enabled: searchText.trim().length >= 2,
-  });
-  const collaborators = collaboratorsQuery.data || [];
-  const userOptions = (userSearchQuery.data || []).map((user) => user.username);
-  const loading = collaboratorsQuery.isFetching;
-  const searching = userSearchQuery.isFetching;
-  const grantMutation = useMutation({
-    mutationFn: ({ targetUsername, access }) => tripService.grantAccess(tripId, targetUsername, access),
-    onSuccess: (granted) => queryClient.setQueryData(['collaborators', tripId], (current) => [...(current || []), granted]),
-  });
-  const revokeMutation = useMutation({
-    mutationFn: (userId) => tripService.revokeAccess(tripId, userId),
-    onSuccess: (_, userId) => queryClient.setQueryData(['collaborators', tripId], (current) =>
-      (current || []).filter((collaborator) => collaborator.userId !== userId)),
-  });
-  const leaveMutation = useMutation({ mutationFn: () => tripService.leaveTrip(tripId) });
-  const submitting = grantMutation.isPending;
+  const { collaborators, loading, grant, revoke, leave, granting: submitting } = useTripCollaborators(isCreateMode ? null : tripId);
+  const { users: searchedUsers, loading: searching } = useUserSearch(searchText);
+  const userOptions = searchedUsers.map((user) => user.username);
 
   const handleGrant = async () => {
     if (!username.trim()) return;
 
     try {
-      await grantMutation.mutateAsync({ targetUsername: username.trim(), access: accessLevel });
+      await grant({ username: username.trim(), accessLevel });
       setUsername('');
       setSearchText('');
       showStatus('Trip access granted');
@@ -78,7 +57,7 @@ const TripAccessPanel = ({ tripId, isOwner = false, currentUserId, selectedUsern
 
   const handleRevoke = async (userId) => {
     try {
-      await revokeMutation.mutateAsync(userId);
+      await revoke(userId);
       showStatus('Trip access revoked');
     } catch (err) {
       showError(err.response?.data?.message || err.message || 'Unable to revoke trip access.');
@@ -87,21 +66,32 @@ const TripAccessPanel = ({ tripId, isOwner = false, currentUserId, selectedUsern
 
   const handleLeave = async () => {
     try {
-      await leaveMutation.mutateAsync();
+      await leave();
       showStatus('You left the trip');
       window.location.href = '/trips';
     } catch (err) {
       showError(err.response?.data?.message || err.message || 'Unable to leave trip.');
     }
   };
-
   return (
     <Stack gap="sm">
       <Text fw={600} size="sm">Trip collaborators</Text>
 
       {!isCreateMode && (loading ? <Loader size="sm" /> : collaborators.map((collaborator) => (
         <Group key={collaborator.userId} justify="space-between">
-          <Text size="sm">{collaborator.knownAs || collaborator.username}</Text>
+          <Group gap="xs">
+            <Box
+              component="span"
+              title={isOnline(collaborator.userId) ? 'Online' : 'Offline'}
+              w={8}
+              h={8}
+              style={{
+                borderRadius: '50%',
+                backgroundColor: isOnline(collaborator.userId) ? 'var(--mantine-color-green-6)' : 'var(--mantine-color-gray-5)',
+              }}
+            />
+            <Text size="sm">{collaborator.knownAs || collaborator.username}</Text>
+          </Group>
           <Group gap="xs">
             <Badge color={collaborator.accessLevel === 'Owner' ? 'blue' : collaborator.accessLevel === 'Editor' ? 'teal' : 'gray'}>
               {collaborator.accessLevel}

@@ -36,4 +36,7 @@ public partial class User
 
     [InverseProperty("User")]
     public virtual ICollection<TripAccess> TripAccesses { get; set; } = new List<TripAccess>();
+
+    public virtual ICollection<FriendRequest> SentFriendRequests { get; set; } = new List<FriendRequest>();
+    public virtual ICollection<FriendRequest> ReceivedFriendRequests { get; set; } = new List<FriendRequest>();
 }

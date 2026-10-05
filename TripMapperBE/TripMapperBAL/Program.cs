@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using TripMapperDB.Models;
 using TripMapperBL.Helpers;
@@ -11,6 +13,7 @@ using TripMapperDAL.Repositories;
 using TripMapperBL.Interfaces;
 using TripMapperBL.Services;
 using TripMapperDAL.RepositoriesSP;
+using TripMapper.Hubs;
 
 namespace TripMapper
 {
@@ -52,6 +55,8 @@ namespace TripMapper
             builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ITripAccessRepository, TripAccessRepository>();
+            builder.Services.AddSingleton<PresenceTracker>();
+            builder.Services.AddSingleton<IUserIdProvider, PresenceUserIdProvider>();
 
 
             // When switching over to stored procedures, comment out the above DAL repositories and uncomment the below ones
@@ -82,6 +87,7 @@ namespace TripMapper
 
             // Controllers and services
             builder.Services.AddControllers();
+            builder.Services.AddSignalR();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
@@ -100,6 +106,20 @@ namespace TripMapper
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            // SignalR sends the bearer token in the query string during WebSocket negotiation.
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
+
+                            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                                context.Token = accessToken;
+
+                            return Task.CompletedTask;
+                        }
+                    };
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuerSigningKey = true,
@@ -130,6 +150,7 @@ namespace TripMapper
             app.UseAuthorization();
 
             app.MapControllers();
+            app.MapHub<PresenceHub>("/hubs/presence");
 
             app.Run();
         }

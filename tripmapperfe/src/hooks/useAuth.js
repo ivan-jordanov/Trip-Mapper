@@ -22,6 +22,7 @@ const useAuth = () => {
   const userQuery = useQuery({
     queryKey: ['current-user'],
     queryFn: authService.getCurrentUser,
+    // Disable the query after token failure until the user authenticates again.
     enabled: hasToken && !sessionInvalid,
     retry: false,
   });
@@ -74,6 +75,7 @@ const useAuth = () => {
     setSessionInvalid(false);
     setUserOverride(undefined);
     const response = await loginMutation.mutateAsync({ username, password });
+    queryClient.removeQueries({ queryKey: ['current-user'], exact: true });
     await fetchUser();
     showStatus('Login successful');
     return response;
@@ -84,6 +86,7 @@ const useAuth = () => {
     setSessionInvalid(false);
     setUserOverride(undefined);
     const response = await registerMutation.mutateAsync(userData);
+    queryClient.removeQueries({ queryKey: ['current-user'], exact: true });
     await fetchUser();
     showStatus('Registration successful');
     return response;

@@ -5,6 +5,7 @@ import showError from '../modules/showError';
 import showStatus from '../modules/showStatus';
 
 const getErrorMessage = (error) => error?.response?.data?.message || error?.message || 'Request failed.';
+const EMPTY_PINS = [];
 
 const usePins = () => {
   const queryClient = useQueryClient();
@@ -120,7 +121,7 @@ const usePins = () => {
 
   return {
     pinDetails: pinDetailsQuery.data || null,
-    pins: pinsQuery.data || [],
+    pins: pinsQuery.data ?? EMPTY_PINS,
     pinsCount: pinsCountQuery.data || 0,
     loading: (pinsQuery.isFetching && !pinsQuery.isError)
       || (pinsCountQuery.isFetching && !pinsCountQuery.isError)

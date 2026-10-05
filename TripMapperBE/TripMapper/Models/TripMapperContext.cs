@@ -27,6 +27,8 @@ public partial class TripMapperContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<FriendRequest> FriendRequests { get; set; } = null!;
+
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -90,6 +92,26 @@ public partial class TripMapperContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__User__3214EC075B18D8E7");
+        });
+
+        modelBuilder.Entity<FriendRequest>(entity =>
+        {
+            // Stores enum values as strings in the database column
+            entity.Property(e => e.Status)
+                  .HasConversion<string>()
+                  .HasMaxLength(20);
+
+            // Configures requester relationship and prevents multiple cascade path errors
+            entity.HasOne(d => d.Requester)
+                  .WithMany(p => p.SentFriendRequests)
+                  .HasForeignKey(d => d.RequesterId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            // Configures addressee relationship and prevents multiple cascade path errors
+            entity.HasOne(d => d.Addressee)
+                  .WithMany(p => p.ReceivedFriendRequests)
+                  .HasForeignKey(d => d.AddresseeId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         OnModelCreatingPartial(modelBuilder);
